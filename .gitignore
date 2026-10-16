@@ -1,0 +1,21 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+dist/
+
+# 환경 변수
+.env
+.env.*
+
+# Obsidian 개인 설정 (문서 자체는 추적)
+docs/LCA/.obsidian/
+
+# 국가 LCI DB 원본은 재배포 금지: 저장소에 넣지 않는다
+*.zip
+data/raw/
+LCI*.xlsx
+*LCI_목록*.xlsx
