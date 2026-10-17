@@ -10,6 +10,7 @@ dist/
 # 환경 변수
 .env
 .env.*
+!Frontend/.env.development
 
 # Obsidian 개인 설정 (문서 자체는 추적)
 docs/LCA/.obsidian/
@@ -19,3 +20,15 @@ docs/LCA/.obsidian/
 data/raw/
 LCI*.xlsx
 *LCI_목록*.xlsx
+
+# 국가 LCI DB 목록(CSV)도 재배포 금지 범위라 올리지 않는다
+docs/LCA/data/*.csv
+
+# 헤드리스 브라우저 점검용 프로필 (작업 부산물)
+**/edge-prof/
+
+# 외부 스킬 설치본
+.claude/skills/ui-ux-pro-max/
+
+# 이론 자료 원문 (저작물, 공개 저장소에 올리지 않음)
+docs/LCA/knowledge/raw/

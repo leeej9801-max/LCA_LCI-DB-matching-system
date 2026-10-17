@@ -1,0 +1,1125 @@
+{
+  "_note": "예시 데이터, 국가 LCI DB 실제 값 아님. rows 1~4는 session.sample.json 계약 예시와 같고, 1행은 mock 에서만 ambiguous를 false로 둔다(동명 그룹 안의 1·2위는 근소로 보지 않는 규칙). 5~12행은 화면 확인용 예시이며 mock-* 후보는 datasets.mock-pool.json 항목이다. 차단되지 않은 1순위를 기본 선택(manual=false)하고 그 기준 conversion을 넣었다. 모든 후보에 데이터 품질 필드(geography·allocation·cutoff·tech_summary)가 있고 계약 예시 출처(list-*)는 null이다. SPCC 행(7·8)의 2순위 열연강판은 V1 차단이다.",
+  "session_id": "7f3a9c21d0b4",
+  "filename": "부품BOM_샘플.xlsx",
+  "db_note": "국가 LCI DB 698건(목록 기준)",
+  "column_mapping": [
+    {
+      "field": "품명",
+      "required": true,
+      "source": "부품명",
+      "method": "auto",
+      "sample": "SPCC 냉연강판 1.2T"
+    },
+    {
+      "field": "규격",
+      "required": false,
+      "source": "재질/규격",
+      "method": "auto",
+      "sample": "t1.2 x 120 x 340"
+    },
+    {
+      "field": "단위",
+      "required": true,
+      "source": "UNIT",
+      "method": "auto",
+      "sample": "kg"
+    },
+    {
+      "field": "수량",
+      "required": true,
+      "source": "소요량",
+      "method": "auto",
+      "sample": "2.4"
+    }
+  ],
+  "summary": {
+    "total": 12,
+    "target": 11,
+    "exclude": 1,
+    "needs_review": 8,
+    "with_issues": 2,
+    "needs_info": 2,
+    "high_confidence": 5,
+    "review": {
+      "pending": 8,
+      "approved": 2,
+      "rejected": 1,
+      "excluded": 1
+    },
+    "match": {
+      "candidate": 9,
+      "vetoed": 1,
+      "no_answer": 2
+    }
+  },
+  "rows": [
+    {
+      "id": 1,
+      "source_row": 7,
+      "raw": {
+        "name": "SGCC 용융아연도금강판",
+        "spec": "0.8T",
+        "unit": "kg",
+        "quantity": "1.1"
+      },
+      "clean": {
+        "name": "SGCC 용융아연도금강판",
+        "spec": "0.8T",
+        "unit": "kg",
+        "unit_display": "kg",
+        "quantity": 1.1
+      },
+      "normalized_name": "sgcc 용융아연도금강판",
+      "synonym_hits": [
+        "SGCC → 용융아연도금강판"
+      ],
+      "attrs": {
+        "소재": "강",
+        "공정": "용융아연도금",
+        "강종": "SGCC",
+        "두께_mm": 0.8
+      },
+      "issues": [],
+      "target": {
+        "status": "대상",
+        "reason": ""
+      },
+      "match_state": "candidate",
+      "candidates": [
+        {
+          "dataset_id": "list-119",
+          "name": "용융아연도금강판",
+          "name_en": "Steel, primary, sheet, hot-dip galvanized",
+          "category": "금속",
+          "org": "환경부(한국환경산업기술원)",
+          "year": 2022,
+          "version": "1.0.0",
+          "reference_unit": "kg",
+          "score": 0.88,
+          "confidence": "높음",
+          "reasons": [
+            "약어 SGCC가 사전에서 일치",
+            "도금 공정(용융) 일치",
+            "분류 금속 일치"
+          ],
+          "veto": null,
+          "duplicate_group": {
+            "size": 3,
+            "others": [
+              "list-120",
+              "list-121"
+            ]
+          },
+          "has_xml": true,
+          "geography": null,
+          "allocation": null,
+          "cutoff": null,
+          "tech_summary": null
+        },
+        {
+          "dataset_id": "list-121",
+          "name": "용융아연도금강판",
+          "name_en": "hot-dipped galvanized steel sheet",
+          "category": "금속",
+          "org": "환경부",
+          "year": 2005,
+          "version": null,
+          "reference_unit": "kg",
+          "score": 0.88,
+          "confidence": "높음",
+          "reasons": [
+            "이름이 같아 점수가 같음"
+          ],
+          "veto": null,
+          "duplicate_group": {
+            "size": 3,
+            "others": [
+              "list-119",
+              "list-120"
+            ]
+          },
+          "has_xml": false,
+          "geography": null,
+          "allocation": null,
+          "cutoff": null,
+          "tech_summary": null
+        },
+        {
+          "dataset_id": "list-140",
+          "name": "전기아연도금강판",
+          "name_en": "Steel, primary, sheet, electro-galvanized",
+          "category": "금속",
+          "org": "환경부(한국환경산업기술원)",
+          "year": 2022,
+          "version": "1.0.0",
+          "reference_unit": "kg",
+          "score": 0.74,
+          "confidence": "보통",
+          "reasons": [],
+          "veto": {
+            "rule_id": "V1",
+            "reason": "도금 공정 충돌(입력 용융, 후보 전기)"
+          },
+          "duplicate_group": null,
+          "has_xml": true,
+          "geography": null,
+          "allocation": null,
+          "cutoff": null,
+          "tech_summary": null
+        }
+      ],
+      "ambiguous": false,
+      "selected_id": "list-119",
+      "selected": {
+        "dataset_id": "list-119",
+        "name": "용융아연도금강판",
+        "category": "금속",
+        "reference_unit": "kg",
+        "score": 0.88,
+        "confidence": "높음",
+        "manual": false
+      },
+      "overrides": {},
+      "review": {
+        "status": "pending",
+        "note": ""
+      },
+      "conversion": {
+        "status": "ok",
+        "value": 1.1,
+        "unit": "kg",
+        "message": "기준흐름 단위와 같음",
+        "missing": [],
+        "method": "identity"
+      },
+      "explanation": null
+    },
+    {
+      "id": 2,
+      "source_row": 11,
+      "raw": {
+        "name": "ABS 수지 펠릿",
+        "spec": "",
+        "unit": "kg",
+        "quantity": "0.12"
+      },
+      "clean": {
+        "name": "ABS 수지 펠릿",
+        "spec": "",
+        "unit": "kg",
+        "unit_display": "kg",
+        "quantity": 0.12
+      },
+      "normalized_name": "abs 수지 펠릿",
+      "synonym_hits": [],
+      "attrs": {
+        "소재": "수지",
+        "수지등급": "ABS"
+      },
+      "issues": [],
+      "target": {
+        "status": "대상",
+        "reason": ""
+      },
+      "match_state": "candidate",
+      "candidates": [
+        {
+          "dataset_id": "list-471",
+          "name": "ABS(분말)",
+          "name_en": "Acrylonitrile butadiene styrene (ABS), powder",
+          "category": "화학물질",
+          "org": "환경부(한국환경산업기술원)",
+          "year": 2024,
+          "version": "1.0.0",
+          "reference_unit": "kg",
+          "score": 0.9,
+          "confidence": "높음",
+          "reasons": [
+            "수지 등급 ABS 일치"
+          ],
+          "veto": null,
+          "duplicate_group": null,
+          "has_xml": true,
+          "geography": null,
+          "allocation": null,
+          "cutoff": null,
+          "tech_summary": null
+        }
+      ],
+      "ambiguous": false,
+      "selected_id": "list-471",
+      "selected": {
+        "dataset_id": "list-471",
+        "name": "ABS(분말)",
+        "category": "화학물질",
+        "reference_unit": "kg",
+        "score": 0.9,
+        "confidence": "높음",
+        "manual": false
+      },
+      "overrides": {},
+      "review": {
+        "status": "approved",
+        "note": ""
+      },
+      "conversion": {
+        "status": "ok",
+        "value": 0.12,
+        "unit": "kg",
+        "message": "기준흐름 단위와 같음",
+        "missing": [],
+        "method": "identity"
+      },
+      "explanation": null
+    },
+    {
+      "id": 3,
+      "source_row": 15,
+      "raw": {
+        "name": "재생 알루미늄 압출재 A6063",
+        "spec": "",
+        "unit": "kg",
+        "quantity": "0.9"
+      },
+      "clean": {
+        "name": "재생 알루미늄 압출재 A6063",
+        "spec": "",
+        "unit": "kg",
+        "unit_display": "kg",
+        "quantity": 0.9
+      },
+      "normalized_name": "재생 알루미늄 압출재 a6063",
+      "synonym_hits": [
+        "A6063 → 알루미늄 압출"
+      ],
+      "attrs": {
+        "소재": "알루미늄",
+        "재생": true,
+        "공정": "압출"
+      },
+      "issues": [],
+      "target": {
+        "status": "대상",
+        "reason": ""
+      },
+      "match_state": "vetoed",
+      "candidates": [
+        {
+          "dataset_id": "list-100",
+          "name": "알루미늄 압출품",
+          "name_en": "Aluminium product, primary, extrusion molding",
+          "category": "금속",
+          "org": "환경부(한국환경산업기술원)",
+          "year": 2022,
+          "version": "1.0.0",
+          "reference_unit": "kg",
+          "score": 0.79,
+          "confidence": "보통",
+          "reasons": [],
+          "veto": {
+            "rule_id": "V2",
+            "reason": "재생/신재 불일치(입력 재생, 후보 신재)"
+          },
+          "duplicate_group": null,
+          "has_xml": true,
+          "geography": null,
+          "allocation": null,
+          "cutoff": null,
+          "tech_summary": null
+        }
+      ],
+      "ambiguous": false,
+      "selected_id": null,
+      "selected": null,
+      "overrides": {},
+      "review": {
+        "status": "pending",
+        "note": ""
+      },
+      "conversion": null,
+      "explanation": null
+    },
+    {
+      "id": 4,
+      "source_row": 19,
+      "raw": {
+        "name": "PC 수지",
+        "spec": "",
+        "unit": "kg",
+        "quantity": "0.07"
+      },
+      "clean": {
+        "name": "PC 수지",
+        "spec": "",
+        "unit": "kg",
+        "unit_display": "kg",
+        "quantity": 0.07
+      },
+      "normalized_name": "pc 수지",
+      "synonym_hits": [],
+      "attrs": {
+        "소재": "수지",
+        "수지등급": "PC"
+      },
+      "issues": [],
+      "target": {
+        "status": "대상",
+        "reason": ""
+      },
+      "match_state": "no_answer",
+      "candidates": [],
+      "ambiguous": false,
+      "selected_id": null,
+      "selected": null,
+      "overrides": {},
+      "review": {
+        "status": "pending",
+        "note": ""
+      },
+      "conversion": null,
+      "explanation": null
+    },
+    {
+      "id": 5,
+      "source_row": 23,
+      "raw": {
+        "name": "점용접 브라켓 어셈블리",
+        "spec": "",
+        "unit": "ea",
+        "quantity": "4"
+      },
+      "clean": {
+        "name": "점용접 브라켓 어셈블리",
+        "spec": "",
+        "unit": "EA",
+        "unit_display": "EA",
+        "quantity": 4
+      },
+      "normalized_name": "점용접 브라켓 어셈블리",
+      "synonym_hits": [],
+      "attrs": {
+        "소재": "강",
+        "공정": "용접"
+      },
+      "issues": [],
+      "target": {
+        "status": "대상",
+        "reason": ""
+      },
+      "match_state": "candidate",
+      "candidates": [
+        {
+          "dataset_id": "mock-3",
+          "name": "열연강판",
+          "name_en": "Hot rolled steel sheet",
+          "category": "금속",
+          "org": "예시 기관",
+          "year": 2019,
+          "version": "1.0.0",
+          "reference_unit": "kg",
+          "score": 0.68,
+          "confidence": "보통",
+          "reasons": [
+            "소재 강 일치"
+          ],
+          "veto": null,
+          "duplicate_group": null,
+          "has_xml": true,
+          "geography": "KR",
+          "allocation": "질량 기준",
+          "cutoff": "99%",
+          "tech_summary": "열간 압연 공정 평균 기술(예시)"
+        }
+      ],
+      "ambiguous": false,
+      "selected_id": "mock-3",
+      "selected": {
+        "dataset_id": "mock-3",
+        "name": "열연강판",
+        "category": "금속",
+        "reference_unit": "kg",
+        "score": 0.68,
+        "confidence": "보통",
+        "manual": false
+      },
+      "overrides": {},
+      "review": {
+        "status": "pending",
+        "note": ""
+      },
+      "conversion": {
+        "status": "needs_info",
+        "value": null,
+        "unit": "kg",
+        "message": "개당 중량이 필요합니다",
+        "missing": [
+          "개당 중량"
+        ],
+        "method": null
+      },
+      "explanation": null
+    },
+    {
+      "id": 6,
+      "source_row": 27,
+      "raw": {
+        "name": "분체도장 처리",
+        "spec": "",
+        "unit": "회",
+        "quantity": "1"
+      },
+      "clean": {
+        "name": "분체도장 처리",
+        "spec": "",
+        "unit": "회",
+        "unit_display": "회",
+        "quantity": 1
+      },
+      "normalized_name": "분체도장 처리",
+      "synonym_hits": [],
+      "attrs": {
+        "공정": "분체도장"
+      },
+      "issues": [],
+      "target": {
+        "status": "대상",
+        "reason": ""
+      },
+      "match_state": "candidate",
+      "candidates": [
+        {
+          "dataset_id": "mock-4",
+          "name": "용융아연도금강판",
+          "name_en": "Hot-dip galvanized steel sheet",
+          "category": "금속",
+          "org": "예시 기관",
+          "year": 2020,
+          "version": "1.0.0",
+          "reference_unit": "kg",
+          "score": 0.41,
+          "confidence": "낮음",
+          "reasons": [
+            "표면처리 공정 키워드 일치"
+          ],
+          "veto": null,
+          "duplicate_group": null,
+          "has_xml": true,
+          "geography": "KR",
+          "allocation": "경제적 기준",
+          "cutoff": "95%",
+          "tech_summary": "용융아연도금 공정(예시)"
+        }
+      ],
+      "ambiguous": false,
+      "selected_id": "mock-4",
+      "selected": {
+        "dataset_id": "mock-4",
+        "name": "용융아연도금강판",
+        "category": "금속",
+        "reference_unit": "kg",
+        "score": 0.41,
+        "confidence": "낮음",
+        "manual": false
+      },
+      "overrides": {},
+      "review": {
+        "status": "pending",
+        "note": ""
+      },
+      "conversion": {
+        "status": "incompatible",
+        "value": null,
+        "unit": "kg",
+        "message": "단위 '회'는 기준흐름 단위(kg)로 환산할 수 없습니다",
+        "missing": [],
+        "method": null
+      },
+      "explanation": null
+    },
+    {
+      "id": 7,
+      "source_row": 31,
+      "raw": {
+        "name": "SPCC 냉연강판 1.2T",
+        "spec": "t1.2 x 120 x 340",
+        "unit": "kg",
+        "quantity": "2.4"
+      },
+      "clean": {
+        "name": "SPCC 냉연강판 1.2T",
+        "spec": "t1.2 x 120 x 340",
+        "unit": "kg",
+        "unit_display": "kg",
+        "quantity": 2.4
+      },
+      "normalized_name": "spcc 냉연강판 1.2t",
+      "synonym_hits": [
+        "SPCC → 냉연강판"
+      ],
+      "attrs": {
+        "소재": "강",
+        "공정": "냉연",
+        "강종": "SPCC",
+        "두께_mm": 1.2
+      },
+      "issues": [
+        "같은 품명이 원본 35행에도 있음"
+      ],
+      "target": {
+        "status": "대상",
+        "reason": ""
+      },
+      "match_state": "candidate",
+      "candidates": [
+        {
+          "dataset_id": "mock-1",
+          "name": "냉연강판",
+          "name_en": "Cold rolled steel sheet",
+          "category": "금속",
+          "org": "예시 기관",
+          "year": 2021,
+          "version": "1.0.0",
+          "reference_unit": "kg",
+          "score": 0.86,
+          "confidence": "높음",
+          "reasons": [
+            "약어 SPCC가 사전에서 일치",
+            "냉연 공정 일치"
+          ],
+          "veto": null,
+          "duplicate_group": {
+            "size": 2,
+            "others": [
+              "mock-2"
+            ]
+          },
+          "has_xml": true,
+          "geography": "KR",
+          "allocation": "질량 기준",
+          "cutoff": "99%",
+          "tech_summary": "냉간 압연 공정 평균 기술(예시)"
+        },
+        {
+          "dataset_id": "mock-2",
+          "name": "냉연강판",
+          "name_en": "Cold rolled steel sheet",
+          "category": "금속",
+          "org": "예시 기관",
+          "year": 2015,
+          "version": null,
+          "reference_unit": "kg",
+          "score": 0.86,
+          "confidence": "높음",
+          "reasons": [
+            "이름이 같아 점수가 같음"
+          ],
+          "veto": null,
+          "duplicate_group": {
+            "size": 2,
+            "others": [
+              "mock-1"
+            ]
+          },
+          "has_xml": false,
+          "geography": "KR",
+          "allocation": "질량 기준",
+          "cutoff": null,
+          "tech_summary": "냉간 압연 공정(예시)"
+        },
+        {
+          "dataset_id": "mock-3",
+          "name": "열연강판",
+          "name_en": "Hot rolled steel sheet",
+          "category": "금속",
+          "org": "예시 기관",
+          "year": 2019,
+          "version": "1.0.0",
+          "reference_unit": "kg",
+          "score": 0.58,
+          "confidence": "보통",
+          "reasons": [],
+          "veto": {
+            "rule_id": "V1",
+            "reason": "냉연/열연 공정 충돌(입력 냉연, 후보 열연)"
+          },
+          "duplicate_group": null,
+          "has_xml": true,
+          "geography": "KR",
+          "allocation": "질량 기준",
+          "cutoff": "99%",
+          "tech_summary": "열간 압연 공정 평균 기술(예시)"
+        }
+      ],
+      "ambiguous": false,
+      "selected_id": "mock-1",
+      "selected": {
+        "dataset_id": "mock-1",
+        "name": "냉연강판",
+        "category": "금속",
+        "reference_unit": "kg",
+        "score": 0.86,
+        "confidence": "높음",
+        "manual": false
+      },
+      "overrides": {},
+      "review": {
+        "status": "pending",
+        "note": ""
+      },
+      "conversion": {
+        "status": "ok",
+        "value": 2.4,
+        "unit": "kg",
+        "message": "기준흐름 단위와 같음",
+        "missing": [],
+        "method": "identity"
+      },
+      "explanation": null
+    },
+    {
+      "id": 8,
+      "source_row": 35,
+      "raw": {
+        "name": "SPCC 냉연강판 1.2T",
+        "spec": "t1.2 x 80 x 200",
+        "unit": "kg",
+        "quantity": "1.6"
+      },
+      "clean": {
+        "name": "SPCC 냉연강판 1.2T",
+        "spec": "t1.2 x 80 x 200",
+        "unit": "kg",
+        "unit_display": "kg",
+        "quantity": 1.6
+      },
+      "normalized_name": "spcc 냉연강판 1.2t",
+      "synonym_hits": [
+        "SPCC → 냉연강판"
+      ],
+      "attrs": {
+        "소재": "강",
+        "공정": "냉연",
+        "강종": "SPCC",
+        "두께_mm": 1.2
+      },
+      "issues": [
+        "같은 품명이 원본 31행에도 있음"
+      ],
+      "target": {
+        "status": "대상",
+        "reason": ""
+      },
+      "match_state": "candidate",
+      "candidates": [
+        {
+          "dataset_id": "mock-1",
+          "name": "냉연강판",
+          "name_en": "Cold rolled steel sheet",
+          "category": "금속",
+          "org": "예시 기관",
+          "year": 2021,
+          "version": "1.0.0",
+          "reference_unit": "kg",
+          "score": 0.86,
+          "confidence": "높음",
+          "reasons": [
+            "약어 SPCC가 사전에서 일치",
+            "냉연 공정 일치"
+          ],
+          "veto": null,
+          "duplicate_group": {
+            "size": 2,
+            "others": [
+              "mock-2"
+            ]
+          },
+          "has_xml": true,
+          "geography": "KR",
+          "allocation": "질량 기준",
+          "cutoff": "99%",
+          "tech_summary": "냉간 압연 공정 평균 기술(예시)"
+        },
+        {
+          "dataset_id": "mock-2",
+          "name": "냉연강판",
+          "name_en": "Cold rolled steel sheet",
+          "category": "금속",
+          "org": "예시 기관",
+          "year": 2015,
+          "version": null,
+          "reference_unit": "kg",
+          "score": 0.86,
+          "confidence": "높음",
+          "reasons": [
+            "이름이 같아 점수가 같음"
+          ],
+          "veto": null,
+          "duplicate_group": {
+            "size": 2,
+            "others": [
+              "mock-1"
+            ]
+          },
+          "has_xml": false,
+          "geography": "KR",
+          "allocation": "질량 기준",
+          "cutoff": null,
+          "tech_summary": "냉간 압연 공정(예시)"
+        },
+        {
+          "dataset_id": "mock-3",
+          "name": "열연강판",
+          "name_en": "Hot rolled steel sheet",
+          "category": "금속",
+          "org": "예시 기관",
+          "year": 2019,
+          "version": "1.0.0",
+          "reference_unit": "kg",
+          "score": 0.58,
+          "confidence": "보통",
+          "reasons": [],
+          "veto": {
+            "rule_id": "V1",
+            "reason": "냉연/열연 공정 충돌(입력 냉연, 후보 열연)"
+          },
+          "duplicate_group": null,
+          "has_xml": true,
+          "geography": "KR",
+          "allocation": "질량 기준",
+          "cutoff": "99%",
+          "tech_summary": "열간 압연 공정 평균 기술(예시)"
+        }
+      ],
+      "ambiguous": false,
+      "selected_id": "mock-1",
+      "selected": {
+        "dataset_id": "mock-1",
+        "name": "냉연강판",
+        "category": "금속",
+        "reference_unit": "kg",
+        "score": 0.86,
+        "confidence": "높음",
+        "manual": false
+      },
+      "overrides": {},
+      "review": {
+        "status": "pending",
+        "note": ""
+      },
+      "conversion": {
+        "status": "ok",
+        "value": 1.6,
+        "unit": "kg",
+        "message": "기준흐름 단위와 같음",
+        "missing": [],
+        "method": "identity"
+      },
+      "explanation": null
+    },
+    {
+      "id": 9,
+      "source_row": 39,
+      "raw": {
+        "name": "고밀도 폴리에틸렌 HDPE",
+        "spec": "",
+        "unit": "kg",
+        "quantity": "0.35"
+      },
+      "clean": {
+        "name": "고밀도 폴리에틸렌 HDPE",
+        "spec": "",
+        "unit": "kg",
+        "unit_display": "kg",
+        "quantity": 0.35
+      },
+      "normalized_name": "고밀도 폴리에틸렌 hdpe",
+      "synonym_hits": [
+        "HDPE → 고밀도 폴리에틸렌"
+      ],
+      "attrs": {
+        "소재": "수지",
+        "수지등급": "HDPE"
+      },
+      "issues": [],
+      "target": {
+        "status": "대상",
+        "reason": ""
+      },
+      "match_state": "candidate",
+      "candidates": [
+        {
+          "dataset_id": "mock-8",
+          "name": "고밀도 폴리에틸렌 수지",
+          "name_en": "High density polyethylene resin",
+          "category": "화학물질",
+          "org": "예시 기관",
+          "year": 2017,
+          "version": "1.0.0",
+          "reference_unit": "kg",
+          "score": 0.91,
+          "confidence": "높음",
+          "reasons": [
+            "수지 등급 HDPE 일치"
+          ],
+          "veto": null,
+          "duplicate_group": null,
+          "has_xml": true,
+          "geography": "KR",
+          "allocation": "질량 기준",
+          "cutoff": "99%",
+          "tech_summary": "고밀도 폴리에틸렌 중합(예시)"
+        }
+      ],
+      "ambiguous": false,
+      "selected_id": "mock-8",
+      "selected": {
+        "dataset_id": "mock-8",
+        "name": "고밀도 폴리에틸렌 수지",
+        "category": "화학물질",
+        "reference_unit": "kg",
+        "score": 0.91,
+        "confidence": "높음",
+        "manual": false
+      },
+      "overrides": {},
+      "review": {
+        "status": "approved",
+        "note": ""
+      },
+      "conversion": {
+        "status": "ok",
+        "value": 0.35,
+        "unit": "kg",
+        "message": "기준흐름 단위와 같음",
+        "missing": [],
+        "method": "identity"
+      },
+      "explanation": null
+    },
+    {
+      "id": 10,
+      "source_row": 43,
+      "raw": {
+        "name": "볼트 M6x20",
+        "spec": "",
+        "unit": "EA",
+        "quantity": "20"
+      },
+      "clean": {
+        "name": "볼트 M6x20",
+        "spec": "",
+        "unit": "EA",
+        "unit_display": "EA",
+        "quantity": 20
+      },
+      "normalized_name": "볼트 m6x20",
+      "synonym_hits": [],
+      "attrs": {
+        "품목": "체결부품"
+      },
+      "issues": [],
+      "target": {
+        "status": "제외",
+        "reason": "체결부품은 LCI 매칭 대상 아님"
+      },
+      "match_state": "no_answer",
+      "candidates": [],
+      "ambiguous": false,
+      "selected_id": null,
+      "selected": null,
+      "overrides": {},
+      "review": {
+        "status": "excluded",
+        "note": "체결부품은 이번 범위 밖"
+      },
+      "conversion": null,
+      "explanation": null
+    },
+    {
+      "id": 11,
+      "source_row": 47,
+      "raw": {
+        "name": "PP 사출품 커버",
+        "spec": "",
+        "unit": "kg",
+        "quantity": "0.22"
+      },
+      "clean": {
+        "name": "PP 사출품 커버",
+        "spec": "",
+        "unit": "kg",
+        "unit_display": "kg",
+        "quantity": 0.22
+      },
+      "normalized_name": "pp 사출품 커버",
+      "synonym_hits": [
+        "PP → 폴리프로필렌"
+      ],
+      "attrs": {
+        "소재": "수지",
+        "수지등급": "PP",
+        "공정": "사출"
+      },
+      "issues": [],
+      "target": {
+        "status": "대상",
+        "reason": ""
+      },
+      "match_state": "candidate",
+      "candidates": [
+        {
+          "dataset_id": "mock-7",
+          "name": "폴리프로필렌 수지",
+          "name_en": "Polypropylene resin",
+          "category": "화학물질",
+          "org": "예시 기관",
+          "year": 2020,
+          "version": "1.0.0",
+          "reference_unit": "kg",
+          "score": 0.66,
+          "confidence": "보통",
+          "reasons": [
+            "수지 등급 PP 일치"
+          ],
+          "veto": null,
+          "duplicate_group": null,
+          "has_xml": true,
+          "geography": "KR",
+          "allocation": "질량 기준",
+          "cutoff": "99%",
+          "tech_summary": "사출 성형용 폴리프로필렌 중합(예시)"
+        }
+      ],
+      "ambiguous": false,
+      "selected_id": "mock-7",
+      "selected": {
+        "dataset_id": "mock-7",
+        "name": "폴리프로필렌 수지",
+        "category": "화학물질",
+        "reference_unit": "kg",
+        "score": 0.66,
+        "confidence": "보통",
+        "manual": false
+      },
+      "overrides": {},
+      "review": {
+        "status": "rejected",
+        "note": "규격(필러 함량) 확인 필요"
+      },
+      "conversion": {
+        "status": "ok",
+        "value": 0.22,
+        "unit": "kg",
+        "message": "기준흐름 단위와 같음",
+        "missing": [],
+        "method": "identity"
+      },
+      "explanation": null
+    },
+    {
+      "id": 12,
+      "source_row": 51,
+      "raw": {
+        "name": "알루미늄 판재 A5052",
+        "spec": "",
+        "unit": "m2",
+        "quantity": "0.8"
+      },
+      "clean": {
+        "name": "알루미늄 판재 A5052",
+        "spec": "",
+        "unit": "m2",
+        "unit_display": "m²",
+        "quantity": 0.8
+      },
+      "normalized_name": "알루미늄 판재 a5052",
+      "synonym_hits": [],
+      "attrs": {
+        "소재": "알루미늄",
+        "합금": "A5052"
+      },
+      "issues": [],
+      "target": {
+        "status": "대상",
+        "reason": ""
+      },
+      "match_state": "candidate",
+      "candidates": [
+        {
+          "dataset_id": "mock-6",
+          "name": "알루미늄 판재",
+          "name_en": "Aluminium sheet",
+          "category": "금속",
+          "org": "예시 기관",
+          "year": 2018,
+          "version": "1.0.0",
+          "reference_unit": "kg",
+          "score": 0.72,
+          "confidence": "보통",
+          "reasons": [
+            "소재 알루미늄 일치",
+            "판재 형태 일치"
+          ],
+          "veto": null,
+          "duplicate_group": null,
+          "has_xml": true,
+          "geography": "GLO",
+          "allocation": "질량 기준",
+          "cutoff": "99%",
+          "tech_summary": "알루미늄 압연 판재 생산(예시)"
+        },
+        {
+          "dataset_id": "list-100",
+          "name": "알루미늄 압출품",
+          "name_en": "Aluminium product, primary, extrusion molding",
+          "category": "금속",
+          "org": "환경부(한국환경산업기술원)",
+          "year": 2022,
+          "version": "1.0.0",
+          "reference_unit": "kg",
+          "score": 0.7,
+          "confidence": "보통",
+          "reasons": [
+            "소재 알루미늄 일치"
+          ],
+          "veto": null,
+          "duplicate_group": null,
+          "has_xml": true,
+          "geography": null,
+          "allocation": null,
+          "cutoff": null,
+          "tech_summary": null
+        }
+      ],
+      "ambiguous": true,
+      "selected_id": "mock-6",
+      "selected": {
+        "dataset_id": "mock-6",
+        "name": "알루미늄 판재",
+        "category": "금속",
+        "reference_unit": "kg",
+        "score": 0.72,
+        "confidence": "보통",
+        "manual": false
+      },
+      "overrides": {},
+      "review": {
+        "status": "pending",
+        "note": ""
+      },
+      "conversion": {
+        "status": "needs_info",
+        "value": null,
+        "unit": "kg",
+        "message": "두께·밀도 입력이 필요합니다",
+        "missing": [
+          "두께",
+          "밀도"
+        ],
+        "method": null
+      },
+      "explanation": null
+    }
+  ]
+}

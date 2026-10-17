@@ -6,9 +6,10 @@ import { fileURLToPath, URL } from 'url'
 export default defineConfig({
   plugins: [react()],
   // base: "/",
-  // server: {
-  //   host: true,
-  // },
+  server: {
+    // host: true,
+    proxy: { '/api': 'http://127.0.0.1:8000' },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
