@@ -1,5 +1,6 @@
 import { AxiosError } from 'axios'
 import * as datasets from './datasets'
+import * as evalRuns from './eval'
 import * as jobs from './jobs'
 import * as sessions from './sessions'
 import * as upload from './upload'
@@ -10,6 +11,8 @@ const handlers = [
   ['post', /^\/sessions\/preview$/, (params, form) => upload.previewUpload(params, form)], // A20
   ['post', /^\/sessions$/, (params, form) => upload.createSession(params, form)], // A01
   ['get', /^\/jobs\/([^/]+)$/, (params, id) => jobs.getJob(id)], // A21
+  ['get', /^\/eval\/runs$/, () => evalRuns.listEvalRuns()], // A19
+  ['get', /^\/eval\/runs\/([^/]+)$/, (params, id) => evalRuns.getEvalRun(id)], // A14
   ['get', /^\/sample\.csv$/, () => upload.getSampleCsv()], // A08
   ['get', /^\/datasets$/, (params) => datasets.searchDatasets(params)], // A05
   ['get', /^\/datasets\/([^/]+)$/, (params, id) => datasets.getDataset(id)], // A06

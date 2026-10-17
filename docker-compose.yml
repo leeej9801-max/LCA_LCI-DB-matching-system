@@ -1,0 +1,37 @@
+# T0 — DB 기반: PostgreSQL 16 + pgvector (spec/03-아키텍처 §5, decisions "DB·벡터 저장")
+# 실행: docker compose up -d      확인: docker compose ps
+# 백엔드·프론트 서비스는 D1(자가 호스팅)에서 이 파일에 추가한다.
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: lci-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lci}
+      POSTGRES_USER: ${POSTGRES_USER:-lci}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?.env 에 POSTGRES_PASSWORD 가 필요합니다}
+      POSTGRES_INITDB_ARGS: --encoding=UTF8
+    ports:
+      # 이 PC 안에서만 접속한다. 외부 공개는 나중에 터널로, DB 포트는 열지 않는다
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - lci_pgdata:/var/lib/postgresql/data
+      # 처음 볼륨을 만들 때 한 번만 실행된다
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    # 8GB PC 기준 작게: 데이터셋 849건 + 벡터 849개라 이 정도로 충분하다
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c work_mem=16MB
+      -c maintenance_work_mem=128MB
+      -c max_connections=30
+    mem_limit: 1g
+    shm_size: 256mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  lci_pgdata:

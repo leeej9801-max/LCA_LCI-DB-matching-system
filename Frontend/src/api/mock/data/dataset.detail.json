@@ -3,5 +3,5 @@
   "dataset_id": "list-100", "name": "알루미늄 압출품", "name_en": "Aluminium product, primary, extrusion molding",
   "category": "금속", "org": "환경부(한국환경산업기술원)", "year": 2022, "version": "1.0.0",
   "has_xml": true, "list_row": 100, "reference_unit": "kg", "duplicate_count": 1,
-  "data_type": "LCI result", "allocation": null, "cutoff": null, "duplicates": []
+  "data_type": "LCI result", "allocation": null, "cutoff": null, "geography": null, "tech_summary": null, "duplicates": []
 }

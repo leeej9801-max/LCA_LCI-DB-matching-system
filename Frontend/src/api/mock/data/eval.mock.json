@@ -1,0 +1,220 @@
+{
+  "_note": "예시 데이터. 72%·86%는 임시 정답셋 42건에서 측정한 기록(decisions)이며 근거로 쓰지 않는다. 그 외 값은 mock.",
+  "list": {
+    "items": [
+      {
+        "run_id": "eval-2",
+        "status": "done",
+        "created_at": "2026-10-17T14:20:00+09:00",
+        "config_label": "TF-IDF + 사전 + Veto + 동명 묶기"
+      },
+      {
+        "run_id": "eval-1",
+        "status": "done",
+        "created_at": "2026-10-17T11:05:00+09:00",
+        "config_label": "TF-IDF 기준선만"
+      }
+    ],
+    "total": 2
+  },
+  "runs": {
+    "eval-2": {
+      "status": "done",
+      "config": {
+        "dict": true,
+        "veto": true,
+        "dedupe": true,
+        "embed_model": null,
+        "rrf": false,
+        "rerank": false,
+        "seed": 42
+      },
+      "meta": {
+        "model": "tfidf (예시)",
+        "index_hash": "mock",
+        "dict_version": "mock",
+        "rules_version": "mock",
+        "seed": 42,
+        "elapsed_s": 1.8
+      },
+      "gold_stats": {
+        "total": 42,
+        "answerable": 36,
+        "no_answer": 6,
+        "no_answer_ratio": 0.14
+      },
+      "metrics": {
+        "top1": 0.86,
+        "top3": null,
+        "high_conf_error_rate": null,
+        "abstain_reject_rate": null
+      },
+      "ablation": [
+        {
+          "step": "M0 기준선 TF-IDF",
+          "top1": 0.72,
+          "top3": null,
+          "abstain_reject_rate": null,
+          "state": "measured"
+        },
+        {
+          "step": "+ 약어·규격 사전",
+          "top1": null,
+          "top3": null,
+          "abstain_reject_rate": null,
+          "state": "pending"
+        },
+        {
+          "step": "+ Veto (MVP 필수 행)",
+          "top1": null,
+          "top3": null,
+          "abstain_reject_rate": null,
+          "state": "pending"
+        },
+        {
+          "step": "+ 동명 묶기(최신 연도)",
+          "top1": 0.86,
+          "top3": null,
+          "abstain_reject_rate": null,
+          "state": "measured"
+        },
+        {
+          "step": "+ bge-m3 임베딩 · RRF",
+          "top1": null,
+          "top3": null,
+          "abstain_reject_rate": null,
+          "state": "pending"
+        },
+        {
+          "step": "+ 리랭커",
+          "top1": null,
+          "top3": null,
+          "abstain_reject_rate": null,
+          "state": "pending"
+        }
+      ],
+      "errors": [
+        {
+          "id": 1,
+          "query": "SPCC 냉연강판 1.2T",
+          "gold_ids": [
+            "mock-1"
+          ],
+          "top1": "mock-3",
+          "reason": "Veto V1이 막지 못함: 이름에 냉연·열연 구분이 없음"
+        },
+        {
+          "id": 2,
+          "query": "SGCC 용융아연도금강판 0.8T",
+          "gold_ids": [
+            "mock-4"
+          ],
+          "top1": "mock-1",
+          "reason": "도금 공정 표기가 사전에 없어 냉연강판이 앞섬"
+        },
+        {
+          "id": 3,
+          "query": "STS304 판재",
+          "gold_ids": [
+            "mock-5"
+          ],
+          "top1": "mock-6",
+          "reason": "약어 STS304가 사전에 없어 알루미늄 판재가 앞섬"
+        },
+        {
+          "id": 4,
+          "query": "체결용 볼트 M8",
+          "gold_ids": [],
+          "top1": "mock-5",
+          "reason": "목록에 없는 품목인데 후보를 냄(정답 없음 처리 실패)"
+        },
+        {
+          "id": 5,
+          "query": "PP 사출 브라켓",
+          "gold_ids": [
+            "mock-7"
+          ],
+          "top1": null,
+          "reason": null
+        }
+      ]
+    },
+    "eval-1": {
+      "status": "done",
+      "config": {
+        "dict": false,
+        "veto": false,
+        "dedupe": false,
+        "embed_model": null,
+        "rrf": false,
+        "rerank": false,
+        "seed": 42
+      },
+      "meta": {
+        "model": "tfidf (예시)",
+        "index_hash": "mock",
+        "dict_version": "mock",
+        "rules_version": "mock",
+        "seed": 42,
+        "elapsed_s": 1.8
+      },
+      "gold_stats": {
+        "total": 42,
+        "answerable": 36,
+        "no_answer": 6,
+        "no_answer_ratio": 0.14
+      },
+      "metrics": {
+        "top1": 0.72,
+        "top3": null,
+        "high_conf_error_rate": null,
+        "abstain_reject_rate": null
+      },
+      "ablation": [
+        {
+          "step": "M0 기준선 TF-IDF",
+          "top1": 0.72,
+          "top3": null,
+          "abstain_reject_rate": null,
+          "state": "measured"
+        },
+        {
+          "step": "+ 약어·규격 사전",
+          "top1": null,
+          "top3": null,
+          "abstain_reject_rate": null,
+          "state": "pending"
+        },
+        {
+          "step": "+ Veto (MVP 필수 행)",
+          "top1": null,
+          "top3": null,
+          "abstain_reject_rate": null,
+          "state": "pending"
+        },
+        {
+          "step": "+ 동명 묶기(최신 연도)",
+          "top1": null,
+          "top3": null,
+          "abstain_reject_rate": null,
+          "state": "pending"
+        },
+        {
+          "step": "+ bge-m3 임베딩 · RRF",
+          "top1": null,
+          "top3": null,
+          "abstain_reject_rate": null,
+          "state": "pending"
+        },
+        {
+          "step": "+ 리랭커",
+          "top1": null,
+          "top3": null,
+          "abstain_reject_rate": null,
+          "state": "pending"
+        }
+      ],
+      "errors": []
+    }
+  }
+}

@@ -77,6 +77,10 @@ export const previewUpload = async (params, form) => {
   }]
 }
 
+// mock 전용: 파일 이름으로 429·작업 실패를 일으켜 `다시 시도` 경로를 시험한다. 새로고침하면 초기화
+const queueFullSeen = new Set()
+const jobFailSeen = new Set()
+
 const eulReul = (w) => ((w.charCodeAt(w.length - 1) - 0xac00) % 28 ? '을' : '를')
 
 // A01 POST /api/sessions — mock은 실제 매칭을 하지 않고 예시 세션으로 간다 (202 + job_id)
@@ -94,7 +98,13 @@ export const createSession = async (params, form) => {
     const last = missing[missing.length - 1]
     return [400, { detail: `필수 컬럼 ${missing.map((m) => `'${m}'`).join(', ')}${eulReul(last)} 찾지 못했습니다.`, code: 'MISSING_COLUMN', meta: { missing } }]
   }
-  return [202, { job_id: createJob({ instant: r.name === SAMPLE_NAME, sessionId: sample.session_id }), session_id: sample.session_id }]
+  if (r.name.includes('queue-full') && !queueFullSeen.has(r.name)) {
+    queueFullSeen.add(r.name)
+    return [429, { detail: '지금 처리 중인 작업이 많습니다. 잠시 후 다시 시도해 주세요.', code: 'QUEUE_FULL' }]
+  }
+  const fail = r.name.includes('job-fail') && !jobFailSeen.has(r.name)
+  if (fail) jobFailSeen.add(r.name)
+  return [202, { job_id: createJob({ instant: r.name === SAMPLE_NAME, sessionId: sample.session_id, fail }), session_id: sample.session_id }]
 }
 
 const csvCell = (v) => `"${String(v ?? '').replaceAll('"', '""')}"`

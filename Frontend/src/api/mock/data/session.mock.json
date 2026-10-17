@@ -2,7 +2,7 @@
   "_note": "예시 데이터, 국가 LCI DB 실제 값 아님. rows 1~4는 session.sample.json 계약 예시와 같고, 1행은 mock 에서만 ambiguous를 false로 둔다(동명 그룹 안의 1·2위는 근소로 보지 않는 규칙). 5~12행은 화면 확인용 예시이며 mock-* 후보는 datasets.mock-pool.json 항목이다. 차단되지 않은 1순위를 기본 선택(manual=false)하고 그 기준 conversion을 넣었다. 모든 후보에 데이터 품질 필드(geography·allocation·cutoff·tech_summary)가 있고 계약 예시 출처(list-*)는 null이다. SPCC 행(7·8)의 2순위 열연강판은 V1 차단이다.",
   "session_id": "7f3a9c21d0b4",
   "filename": "부품BOM_샘플.xlsx",
-  "db_note": "국가 LCI DB 698건(목록 기준)",
+  "db_note": "국가 LCI DB 849건(공개 목록 기준)",
   "column_mapping": [
     {
       "field": "품명",

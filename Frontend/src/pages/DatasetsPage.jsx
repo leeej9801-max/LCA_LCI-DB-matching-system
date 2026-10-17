@@ -35,7 +35,7 @@ const DatasetsPage = () => {
     <>
       <div className="head">
         <h1>데이터셋 탐색</h1>
-        <p>국가 LCI DB 698건. 이름·분류로 검색.</p>
+        <p>국가 LCI DB 849건. 이름·분류로 검색.</p>
       </div>
 
       <DatasetBrowser params={params} setParams={update} selectedId={selectedId} onRowClick={(id) => update({ id })} />
