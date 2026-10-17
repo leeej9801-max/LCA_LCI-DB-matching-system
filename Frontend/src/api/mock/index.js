@@ -1,9 +1,16 @@
 import { AxiosError } from 'axios'
 import * as datasets from './datasets'
+import * as jobs from './jobs'
 import * as sessions from './sessions'
+import * as upload from './upload'
 
-// [메서드, 경로 패턴(baseURL '/api' 제외), 핸들러(쿼리 params, ...경로 인자, 요청 본문) → [status, body]]
+// [메서드, 경로 패턴(baseURL '/api' 제외), 핸들러(쿼리 params, ...경로 인자, 요청 본문) → [status, body] (Promise도 가능)]
+// 요청 본문은 JSON 객체, 업로드(A20·A01)는 FormData 그대로
 const handlers = [
+  ['post', /^\/sessions\/preview$/, (params, form) => upload.previewUpload(params, form)], // A20
+  ['post', /^\/sessions$/, (params, form) => upload.createSession(params, form)], // A01
+  ['get', /^\/jobs\/([^/]+)$/, (params, id) => jobs.getJob(id)], // A21
+  ['get', /^\/sample\.csv$/, () => upload.getSampleCsv()], // A08
   ['get', /^\/datasets$/, (params) => datasets.searchDatasets(params)], // A05
   ['get', /^\/datasets\/([^/]+)$/, (params, id) => datasets.getDataset(id)], // A06
   ['get', /^\/sessions\/([^/]+)$/, (params, id) => sessions.getSession(id)], // A02
@@ -22,8 +29,8 @@ export default async function mockAdapter(config) {
   for (const [m, pattern, handle] of handlers) {
     const match = m === method && path.match(pattern)
     if (match) {
-      const body = config.data ? JSON.parse(config.data) : {}
-      ;[status, data] = handle(config.params ?? {}, ...match.slice(1).map(decodeURIComponent), body)
+      const body = config.data instanceof FormData ? config.data : config.data ? JSON.parse(config.data) : {}
+      ;[status, data] = await handle(config.params ?? {}, ...match.slice(1).map(decodeURIComponent), body)
       break
     }
   }
