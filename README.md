@@ -26,25 +26,6 @@ BOM 올리기 → 정제(품명·단위·수량) → 후보 검색 → 사람이
 
 스택: FastAPI · PostgreSQL + pgvector · Ollama(bge-m3) · scikit-learn(TF-IDF) · React.
 
-## 실행 (Windows 기준)
-
-`.env.example`을 `.env`로 복사해 비밀번호를 바꿉니다.
-
-```
-docker compose up -d                       # DB
-cd Backend
-uv sync
-uv run --env-file ..\.env python -m app.db.migrate        # 마이그레이션
-uv run --env-file ..\.env python -m fastapi dev main.py --port 8000
-```
-
-```
-cd Frontend
-npm install
-npm run dev:real     # 데이터셋·세션 API는 실제 서버, 평가·관리 화면은 예시(mock)
-npm run dev          # 전부 mock
-```
-
 검색을 쓰려면 국가 DB를 적재하고 인덱스를 만들어야 합니다(`python -m app.ingest`, `python -m app.indexer --activate`).
 임베딩은 로컬 [Ollama](https://ollama.com)의 `bge-m3`를 씁니다.
 
@@ -53,19 +34,6 @@ npm run dev          # 전부 mock
 **국가 LCI DB 원본(ZIP·XML·목록)은 이 저장소에 없습니다.** 재배포가 금지되어 있어 올리지 않으며,
 직접 내려받아 `data/raw/` 아래에 두어야 적재할 수 있습니다. 화면의 샘플 BOM은 공개 자료를 바탕으로 한 가정이며 실제 업체 BOM이 아닙니다.
 
-## 시험과 CI
-
-```
-cd Backend
-uv run pytest -q -rs        # 백엔드
-
-cd ..\Frontend
-npm run lint
-npm run build
-```
-
-푸시마다 GitHub Actions(`.github/workflows/ci.yml`)가 같은 검사를 돌립니다.
-저장소에 없는 자료(국가 DB 원본 등)가 필요한 시험은 건너뜁니다. 건너뛴 이유는 `-rs` 출력에 나옵니다.
 
 ## 현재 상태와 한계
 
