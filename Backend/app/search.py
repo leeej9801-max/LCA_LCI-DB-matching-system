@@ -3,7 +3,9 @@
 동명 데이터셋은 합치지 않는다(T9). ANN 인덱스 없이 pgvector 정확 비교만 쓴다.
 """
 import argparse
+import hashlib
 import sys
+import threading
 
 import psycopg
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -44,10 +46,26 @@ def ordered(scores, sn):
     return sorted(scores, key=lambda d: (-scores[d], -sn[d]))
 
 
+# 학습한 벡터라이저·행렬 한 벌(프로세스 안에 하나). 키 = 항목 검색 텍스트 목록의 해시. 행렬의 행은 텍스트에만 달려 있으므로
+# 항목의 dataset_id·순서가 바뀌어도 텍스트가 같으면 같은 모델이다(점수의 id 대응은 호출마다 현재 항목으로 한다)
+_TFIDF = {"key": None, "vec": None, "matrix": None}
+_TFIDF_LOCK = threading.Lock()
+
+
+def tfidf_model(items):
+    """전체 항목으로 학습한 (벡터라이저, 행렬). 항목 텍스트가 같으면 다시 학습하지 않는다."""
+    texts = [it["text"] for it in items]
+    key = hashlib.sha256("\x1f".join(texts).encode("utf-8")).hexdigest()
+    with _TFIDF_LOCK:
+        if _TFIDF["key"] != key:
+            vec = TfidfVectorizer(analyzer="char_wb", ngram_range=(2, 4))
+            _TFIDF.update(key=key, vec=vec, matrix=vec.fit_transform(texts))
+        return _TFIDF["vec"], _TFIDF["matrix"]
+
+
 def tfidf_rank(items, query, top=TOP, allowed=None):
-    """allowed(dataset_id 집합)를 주면 그 안에서만 순위를 매긴다. 학습(IDF)은 항상 전체 항목으로 한다."""
-    vec = TfidfVectorizer(analyzer="char_wb", ngram_range=(2, 4))
-    matrix = vec.fit_transform([it["text"] for it in items])
+    """allowed(dataset_id 집합)를 주면 그 안에서만 순위를 매긴다. 학습(IDF)은 항상 전체 항목으로 하고, 같은 항목이면 한 번만 한다."""
+    vec, matrix = tfidf_model(items)
     sims = (matrix @ vec.transform([query]).T).toarray().ravel()  # 행이 L2 정규화돼 있어 내적 = 코사인
     scores = {it["dataset_id"]: float(s) for it, s in zip(items, sims) if s > 0 and (allowed is None or it["dataset_id"] in allowed)}
     sn = {it["dataset_id"]: it["list_sn"] for it in items}

@@ -118,6 +118,9 @@ def test_limit_offset(client):
     assert sns(get(client, limit=3, offset=3)) == sns(get(client, limit=50))[3:6]
     assert client.get("/api/datasets", params={"limit": 51}).status_code == 422
     assert client.get("/api/datasets", params={"offset": -1}).status_code == 422
+    body = client.get("/api/datasets", params={"limit": 51}).json()  # 기본 422(detail 배열)가 아니라 공통 모양
+    assert body["detail"] == "요청 값이 올바르지 않습니다" and body["code"] == "INVALID_REQUEST"
+    assert body["meta"]["errors"] == [{"loc": ["query", "limit"], "msg": body["meta"]["errors"][0]["msg"]}]
 
 
 @needs_db
@@ -130,7 +133,7 @@ def test_detail_nulls_duplicates_and_404(client):
     assert [x["dataset_id"] for x in d["duplicates"]] == ["list-3", "list-1"]  # 자기 자신 제외, 연도 내림(같으면 sn 큰 것)
     for bad in ("list-99999", "abc", "list-1x"):
         r = client.get(f"/api/datasets/{bad}")
-        assert r.status_code == 404 and isinstance(r.json()["detail"], str)
+        assert r.status_code == 404 and isinstance(r.json()["detail"], str) and r.json()["code"] == "DATASET_NOT_FOUND"
 
 
 @needs_db

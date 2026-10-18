@@ -2,12 +2,14 @@
 
 임베더 인터페이스: `model_name`(저장 키) + `embed(list[str]) -> list[list[float]]`(길이 1, 1024차원). 시험은 가짜 임베더로 바꿔 끼운다.
 """
+import logging
 import math
 import os
 import time
 
 import httpx
 
+log = logging.getLogger("lci.embedder")
 DIM = 1024
 BATCH = 32
 DEFAULT_HOST = "http://127.0.0.1:11434"
@@ -55,7 +57,8 @@ class OllamaEmbedder:
             batch = texts[i:i + BATCH]
             r = self.post_embed(batch)
             if r.status_code != 200:  # 모델을 받지 않았으면 404 등
-                raise SystemExit(f"{OLLAMA_DOWN} (HTTP {r.status_code}: {r.text[:200]})")
+                log.warning("Ollama 응답 오류 HTTP %s: %s", r.status_code, r.text[:500])  # 원문은 로그에만. 사용자에게는 고정 문장
+                raise SystemExit(OLLAMA_DOWN)
             vectors = r.json()["embeddings"]
             if len(vectors) != len(batch):
                 raise SystemExit(f"Ollama가 {len(batch)}개 중 {len(vectors)}개만 돌려주었습니다")

@@ -1,4 +1,5 @@
 """작업 큐·작업자 시험. 임시 DB + 가짜 임베더."""
+import logging
 import os
 import signal
 import subprocess
@@ -183,3 +184,44 @@ def test_process_exits_after_signal_with_running_job(bomdb):
 
 def test_new_stages_shape():
     assert [set(s) for s in jobs.new_stages()] == [{"name", "state", "done", "total", "started_at", "finished_at"}] * 3
+
+
+@needs_db
+def test_failed_job_detail_is_fixed_text_and_original_goes_to_log(bomdb, caplog):
+    """A1 #3: 예외 이름·내부 문구는 A21 error.detail 에 나가지 않고 로그에만 남는다."""
+    class Broken(FakeEmbedder):
+        def embed(self, texts):
+            raise RuntimeError("secret internal detail postgres://u:p@127.0.0.1:5432/x")
+
+    jid = make_job(bomdb, add_session(bomdb, ["냉연강판"]))
+    with caplog.at_level(logging.ERROR, logger="lci.jobs"):
+        jobs.run_match_job(bomdb, jid, lambda ci: Broken())
+    j = job(bomdb, jid)
+    assert j["state"] == "failed" and j["error"] == {"detail": jobs.MATCH_FAILED_DETAIL, "code": "MATCH_FAILED"}
+    assert "RuntimeError" not in j["error"]["detail"] and "secret" not in str(j["error"])
+    assert "secret internal detail" in caplog.text  # 원문은 로그에
+
+
+@needs_db
+def test_ollama_response_body_is_not_in_job_error(bomdb, caplog):
+    class Rejecting(FakeEmbedder):
+        def embed(self, texts):  # 임베더가 응답 오류를 로그에 남기고 고정 문장으로 멈추는 경로와 같은 모양
+            raise SystemExit(OLLAMA_DOWN)
+
+    jid = make_job(bomdb, add_session(bomdb, ["냉연강판"]))
+    jobs.run_match_job(bomdb, jid, lambda ci: Rejecting())
+    assert job(bomdb, jid)["error"] == {"detail": OLLAMA_DOWN, "code": "EMBEDDER_UNAVAILABLE"}
+
+
+def test_polling_db_error_is_logged_not_swallowed(monkeypatch, caplog):
+    monkeypatch.setattr(jobs, "POLL_SECONDS", 0.02)
+    monkeypatch.setattr(jobs, "claim", lambda ci: (_ for _ in ()).throw(psycopg.OperationalError("connection refused")))
+    w = jobs.Worker("postgresql://nowhere", lambda ci: FakeEmbedder())
+    with caplog.at_level(logging.WARNING, logger="lci.jobs"):
+        w.thread.start()
+        time.sleep(0.4)  # 폴링이 여러 번 실패해도 끊기지 않는다
+        alive = w.thread.is_alive()
+        w.stop()
+    assert alive
+    warns = [r for r in caplog.records if "작업 폴링 중 DB 오류" in r.getMessage()]
+    assert len(warns) == 1 and "connection refused" in warns[0].getMessage()  # 30초에 한 번이라 몰아서 찍지 않는다

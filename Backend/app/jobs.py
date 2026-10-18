@@ -5,6 +5,7 @@
 서버 시작 때 running 이던 작업은 failed(interrupted). 만료된 세션은 시작 때와 매시간 지운다.
 작업 취소(DELETE)와 재시작 후 자동 재실행은 만들지 않는다.
 """
+import logging
 import secrets
 import threading
 import time
@@ -14,6 +15,8 @@ from psycopg.types.json import Jsonb
 from app.embedder import OLLAMA_DOWN, OllamaEmbedder
 from app.errors import ApiError
 
+log = logging.getLogger("lci.jobs")
+MATCH_FAILED_DETAIL = "매칭 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."  # A21 error.detail 은 코드별 고정 문장(원문은 로그에만)
 MAX_RUNNING = 2  # 매칭 동시 실행 상한(설정값)
 QUEUE_LIMIT = 10  # 대기 + 실행 합 상한(설정값). 넘으면 A01 이 429 QUEUE_FULL
 POLL_SECONDS = 0.5
@@ -88,9 +91,11 @@ def run_match_job(conninfo_, job_id, make_embedder=default_embedder):
                                                        "cache_hits": result["cache_hits"], "run_id": result["run_id"]})
     except SystemExit as e:  # 임베더는 Ollama 에 닿지 못하면 SystemExit(OLLAMA_DOWN…) 로 멈춘다
         code = "EMBEDDER_UNAVAILABLE" if str(e).startswith(OLLAMA_DOWN) else "MATCH_FAILED"
-        fail(conninfo_, job_id, str(e), code)
+        log.warning("매칭 작업 %s 실패(%s): %s | 원인: %r", job_id, code, e, e.__cause__)  # 원문은 로그에만
+        fail(conninfo_, job_id, OLLAMA_DOWN if code == "EMBEDDER_UNAVAILABLE" else MATCH_FAILED_DETAIL, code)
     except Exception as e:  # noqa: BLE001  작업자는 어떤 오류든 작업 실패로 남기고 다음 작업으로 간다
-        fail(conninfo_, job_id, f"매칭 중 오류가 발생했습니다: {type(e).__name__}: {e}"[:500], "MATCH_FAILED")
+        log.exception("매칭 작업 %s 실패", job_id)
+        fail(conninfo_, job_id, MATCH_FAILED_DETAIL, "MATCH_FAILED")
 
 
 def fail(conninfo_, job_id, detail, code):
@@ -124,6 +129,7 @@ class Worker:
         self.conninfo, self.make_embedder = conninfo_, make_embedder
         self.slots = threading.Semaphore(max_running)
         self.stop_event = threading.Event()
+        self.last_warned = float("-inf")
         self.thread = threading.Thread(target=self.loop, name="job-poller", daemon=True)
 
     def start(self):
@@ -144,8 +150,10 @@ class Worker:
                         threading.Thread(target=self.run, args=(job_id,), name=f"match-{job_id}", daemon=True).start()
                         continue
                     self.slots.release()
-            except psycopg.Error:
-                pass  # DB 가 잠시 끊겨도 폴링은 계속한다
+            except psycopg.Error as e:  # DB 가 잠시 끊겨도 폴링은 계속한다. 다만 흔적은 남긴다(끊긴 동안 0.5초마다 쓰지 않게 30초에 한 번)
+                if time.monotonic() - self.last_warned > 30:
+                    self.last_warned = time.monotonic()
+                    log.warning("작업 폴링 중 DB 오류(계속 재시도): %s", e)
             self.stop_event.wait(POLL_SECONDS)
 
     def run(self, job_id):

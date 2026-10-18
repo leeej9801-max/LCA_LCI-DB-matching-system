@@ -177,3 +177,16 @@ def test_estimate_is_skipped_for_transport_only(inputs):
     assert by[6]["ref_flow_unit"] is None and by[6]["ref_flow_name"] is None and ("list-6", "ref_flow_estimate_skipped") in codes
     assert ("list-6", "ref_flow_estimated") not in codes
     assert by[1]["ref_flow_unit"] == "kg" and ("list-1", "ref_flow_estimated") in codes and ("list-1", "ref_flow_estimate_skipped") not in codes
+
+
+def test_importing_ingest_does_not_read_the_seed(monkeypatch):
+    """A1 #23: 모듈을 불러올 때 시드 파일을 읽지 않는다. build() 가 그때 불러오거나 인자로 받는다."""
+    import importlib
+    from app import ingest, roles
+
+    def forbidden(*a, **k):
+        raise AssertionError("import 때 시드를 읽었다")
+    monkeypatch.setattr(roles, "load_seed", forbidden)
+    importlib.reload(ingest)  # 시드 읽기가 있었다면 여기서 실패
+    assert not hasattr(ingest, "SEED")
+    importlib.reload(ingest)

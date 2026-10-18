@@ -29,7 +29,6 @@ ROLE_MIGRATION = "0006_role.sql"
 NAME_CHECK_MIN = 0.10  # exact 인데 이름 점검 점수가 이보다 낮으면 name_mismatch(사람이 본다)
 GATE_TO_GATE = re.compile(r"gate[\s-]*to[\s-]*gate", re.I)
 
-SEED = roles.load_seed()
 COLUMNS = ["dataset_id", "list_sn", "ilcd_uuid", "name_ko", "name_en", "category", "developer", "dev_year", "version", "has_xml",
            "reference_year", "geography", "tech_description", "allocation", "cutoff", "dataset_type", "ref_flow_name",
            "ref_flow_unit", "ref_flow_amount", "system_boundary", "source_file", "source_hash"]
@@ -68,8 +67,10 @@ def read_inputs(list_path, map_path, features_path):
     return rows, mapping, features
 
 
-def build(rows, mapping, features):
-    """(데이터셋 dict 목록, 이슈 목록 [(dataset_id, code, severity, message, detail)]). DB 없이 계산만 한다."""
+def build(rows, mapping, features, seed=None):
+    """(데이터셋 dict 목록, 이슈 목록 [(dataset_id, code, severity, message, detail)]). DB 없이 계산만 한다.
+    seed: 역할 시드(이름 → 역할). None 이면 그때 불러온다(모듈을 불러올 때는 파일을 읽지 않는다)."""
+    seed = roles.load_seed() if seed is None else seed
     by_sha = {v["sha"]: v for v in features.values() if v.get("sha")}
     links = {}
     for m in mapping:
@@ -108,7 +109,7 @@ def build(rows, mapping, features):
         feat = features.get(link["file"]) or next((v for s, v in by_sha.items() if s.startswith(link["sha"])), None) or {}
         kind = link["kind"]
         ref = feat.get("ref_flow") or None
-        if ref and ref.get("estimated") and roles.role_of(ds["name_ko"], ds["category"], SEED) == "transport":
+        if ref and ref.get("estimated") and roles.role_of(ds["name_ko"], ds["category"], seed) == "transport":
             # 수송의 출력은 제품이 아니라 서비스(사람·km, 톤·km)라 "양 1.0 비요소 출력" 추정이 맞지 않는다(T13.2)
             issue(ds, "ref_flow_estimate_skipped", "info", "수송 데이터셋은 기준 흐름을 추정하지 않음", {"estimated_name": ref.get("name")})
             ref = None

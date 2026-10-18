@@ -63,3 +63,28 @@ def test_new_dataset_not_in_index_is_stale(indexed):
 def test_model_mismatch_stops(indexed):
     with psycopg.connect(indexed) as conn, pytest.raises(SystemExit, match="모델"):
         search(conn, FakeEmbedder(model_name="fake:other"), "냉연강판")
+
+
+def test_tfidf_trains_once_per_index_and_again_when_items_change(monkeypatch):
+    """A1 #1: 같은 항목이면 학습은 한 번, 항목 텍스트가 바뀌면 다시. 순위·점수는 매번 같다."""
+    from app import search as s
+    fits = []
+    real = s.TfidfVectorizer
+
+    class Counting(real):
+        def fit_transform(self, *a, **k):
+            fits.append(1)
+            return super().fit_transform(*a, **k)
+    monkeypatch.setattr(s, "TfidfVectorizer", Counting)
+    s._TFIDF.update(key=None, vec=None, matrix=None)
+    items = [{"dataset_id": f"list-{i}", "list_sn": i, "text": t} for i, t in enumerate(["냉연강판 cold rolled 금속", "열연강판 hot rolled 금속", "알루미늄 판재 금속"], 1)]
+    first = [s.tfidf_rank(items, "냉연강판") for _ in range(5)]
+    assert len(fits) == 1 and all(f == first[0] for f in first)
+    assert s.tfidf_rank(items, "냉연강판", allowed={"list-2"}) == [x for x in first[0] if x[0] == "list-2"]  # 허용 필터도 같은 모델
+    assert len(fits) == 1
+    changed = [dict(items[0], text="냉연강판 cold rolled steel 금속")] + items[1:]
+    s.tfidf_rank(changed, "냉연강판")
+    assert len(fits) == 2  # 텍스트가 바뀌면 다시 학습
+    s.tfidf_rank(changed, "냉연강판")
+    assert len(fits) == 2
+    s._TFIDF.update(key=None, vec=None, matrix=None)

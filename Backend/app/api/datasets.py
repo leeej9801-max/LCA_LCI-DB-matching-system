@@ -3,10 +3,11 @@ import re
 from typing import Literal
 
 import psycopg
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from psycopg.rows import dict_row
 
 from app.db.connection import conninfo
+from app.errors import ApiError
 from app.schemas import Dataset, DatasetDetail, DatasetSearchResponse
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
@@ -114,7 +115,7 @@ def search_datasets(
 def get_dataset(dataset_id: str, conn=Depends(get_conn)):  # A06
     r = conn.execute(BASE + " WHERE dataset_id = %s", (dataset_id,)).fetchone() if DATASET_ID.match(dataset_id) else None
     if not r:
-        raise HTTPException(404, detail=f"데이터셋을 찾을 수 없습니다: {dataset_id}")
+        raise ApiError(404, f"데이터셋을 찾을 수 없습니다: {dataset_id}", "DATASET_NOT_FOUND")
     dups = conn.execute(
         "SELECT dataset_id, developer, dev_year, version FROM lci_dataset WHERE name_ko = %s AND dataset_id <> %s "
         "ORDER BY dev_year DESC NULLS LAST, list_sn DESC", (r["name_ko"], dataset_id)).fetchall()

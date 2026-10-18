@@ -67,7 +67,7 @@ def test_upload_errors(client):
     assert_error(post(client, "/api/sessions", b"x" * (5 * 1024 * 1024 + 1)), 413, "FILE_TOO_LARGE")
     r = post(client, "/api/sessions", ("품명,단위,수량\n" + "a,kg,1\n" * 2001).encode())
     assert_error(r, 400, "TOO_MANY_ROWS", {"rows": 2001, "limit": 2000})
-    assert "code" not in client.get("/api/datasets/list-99999").json()  # A06 404 본문은 그대로(회귀 방지)
+    assert_error(client.get("/api/datasets/list-99999"), 404, "DATASET_NOT_FOUND")  # H1: A06 404 에도 code 를 붙였다(전에는 code 없음)
 
 
 @needs_db
