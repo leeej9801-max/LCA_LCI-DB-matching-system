@@ -13,7 +13,7 @@
 
 ## 스택
 
-- Backend: FastAPI, Python 3.12, uv (`Backend/`). 실행: `cd Backend && uv run fastapi dev main.py` (8000번 포트)
+- Backend: FastAPI, Python 3.12, uv (`Backend/`). 실행(Windows): `cd Backend && uv run --env-file ..\.env python -m fastapi dev main.py --port 8000` (8000번 포트). 앱이 `.env`를 직접 읽지 않아 `--env-file`이 필요하고, `uv run fastapi`는 실행 파일을 못 찾는 경우가 있어 `python -m`을 쓴다
 - Frontend: Vite 7 + React 19 (JavaScript, TypeScript 아님) + Bootstrap 5 + axios + react-router 8 (`Frontend/`). 실행: `cd Frontend && npm run dev`
 - 별칭: `@`, `@pages`, `@styles`, `@assets`, `@hooks` (vite.config.js 참고)
 - UI 문구는 한국어, 코드 식별자는 영어.

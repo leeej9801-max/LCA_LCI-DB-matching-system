@@ -1,0 +1,55 @@
+# 최소 CI: 푸시·PR마다 백엔드 시험(Postgres+pgvector)과 프런트 lint·build를 돌린다.
+# 저장소 밖 자료(docs/LCA, data/raw)가 필요한 시험은 여기서 건너뛴다. 건너뛴 이유는 -rs 로 로그에 찍힌다.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: lci
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: lci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lci -d lci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: lci
+      POSTGRES_PASSWORD: ci-only-password
+      POSTGRES_DB: lci
+    defaults:
+      run:
+        working-directory: Backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --frozen
+      - run: uv run pytest -q -rs
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
