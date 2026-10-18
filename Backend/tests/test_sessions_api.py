@@ -4,10 +4,12 @@ import json
 
 import psycopg
 import pytest
+from psycopg.rows import dict_row
 from fastapi.testclient import TestClient
 
 from app import jobs
 from app.embedder import OLLAMA_DOWN
+from app.api.datasets import get_conn
 from app.api.sessions import get_db
 from app.schemas import JobStatus, PreviewResponse, SessionPayload
 from main import app
@@ -23,7 +25,11 @@ def client(bomdb):  # noqa: F811
     def override():
         with psycopg.connect(bomdb) as conn:
             yield conn
+    def override_datasets():  # A06 도 임시 DB 로: 안 바꾸면 기본 lci DB 에 붙어, 마이그레이션 안 된 환경(CI)에서 깨진다
+        with psycopg.connect(bomdb, row_factory=dict_row) as conn:
+            yield conn
     app.dependency_overrides[get_db] = override
+    app.dependency_overrides[get_conn] = override_datasets
     c = TestClient(app)  # with 없이: lifespan(실제 작업자)을 띄우지 않는다
     c.ci = bomdb
     try:

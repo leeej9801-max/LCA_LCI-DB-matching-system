@@ -1,4 +1,75 @@
-# LCA_LCI-DB-matching-system
-LCA_LCI DB matching system
+# LCI-Match
 
-- 실제 연결됨(A05·A06): `cd Frontend && npm run dev:real` 은 데이터셋 API만 백엔드(127.0.0.1:8000)로 보내고 나머지는 mock 으로 둔다.
+자동차 부품 BOM(부품 목록)의 각 행에 맞는 **국가 LCI DB(ILCD) 데이터셋 후보**를 찾아 주는 보조 도구입니다.
+LCA 실무에서 사람이 하던 "품명 → 데이터셋 찾기" 반복 작업을 줄이는 것이 목적이며, **후보는 사람이 확인·승인해야 확정**됩니다.
+비상업 포트폴리오 프로젝트이고, 현재 개발 중입니다.
+
+## 하는 일
+
+```
+BOM 올리기 → 정제(품명·단위·수량) → 후보 검색 → 사람이 확인·승인 → 승인한 행만 내보내기
+```
+
+- **하이브리드 검색**: TF-IDF(글자 일치)와 임베딩(bge-m3, 의미 유사)을 RRF로 합쳐 후보를 냅니다.
+- **소재·공정 구분**: BOM의 `구분`(소재/공정) 열이 있으면 데이터셋 역할(소재·공정·합본·수송 …)로 후보를 걸러 냅니다.
+- **단위 환산은 코드가 계산**합니다. LLM은 계산하지 않습니다. 환산이 끝나지 않은 행은 승인이 거부됩니다.
+- 값이 없으면 지어내지 않고 비워 둡니다("기준 단위 없음" 등).
+- 탄소 배출량은 계산하지 않습니다. 데이터셋 연결까지만 합니다.
+
+## 구성
+
+| 폴더 | 내용 |
+|---|---|
+| `Backend/` | FastAPI, PostgreSQL 16 + pgvector, 적재·인덱싱·검색·세션 API |
+| `Frontend/` | Vite + React 19 (JavaScript), 소개·업로드·결과 검토·데이터셋 탐색 화면 |
+| `docker-compose.yml` | 개발용 DB(`pgvector/pgvector:pg16`) |
+
+스택: FastAPI · PostgreSQL + pgvector · Ollama(bge-m3) · scikit-learn(TF-IDF) · React.
+
+## 실행 (Windows 기준)
+
+`.env.example`을 `.env`로 복사해 비밀번호를 바꿉니다.
+
+```
+docker compose up -d                       # DB
+cd Backend
+uv sync
+uv run --env-file ..\.env python -m app.db.migrate        # 마이그레이션
+uv run --env-file ..\.env python -m fastapi dev main.py --port 8000
+```
+
+```
+cd Frontend
+npm install
+npm run dev:real     # 데이터셋·세션 API는 실제 서버, 평가·관리 화면은 예시(mock)
+npm run dev          # 전부 mock
+```
+
+검색을 쓰려면 국가 DB를 적재하고 인덱스를 만들어야 합니다(`python -m app.ingest`, `python -m app.indexer --activate`).
+임베딩은 로컬 [Ollama](https://ollama.com)의 `bge-m3`를 씁니다.
+
+## 데이터
+
+**국가 LCI DB 원본(ZIP·XML·목록)은 이 저장소에 없습니다.** 재배포가 금지되어 있어 올리지 않으며,
+직접 내려받아 `data/raw/` 아래에 두어야 적재할 수 있습니다. 화면의 샘플 BOM은 공개 자료를 바탕으로 한 가정이며 실제 업체 BOM이 아닙니다.
+
+## 시험과 CI
+
+```
+cd Backend
+uv run pytest -q -rs        # 백엔드
+
+cd ..\Frontend
+npm run lint
+npm run build
+```
+
+푸시마다 GitHub Actions(`.github/workflows/ci.yml`)가 같은 검사를 돌립니다.
+저장소에 없는 자료(국가 DB 원본 등)가 필요한 시험은 건너뜁니다. 건너뛴 이유는 `-rs` 출력에 나옵니다.
+
+## 현재 상태와 한계
+
+- 업로드 → 결과 검토 → 내보내기까지 실제 서버로 동작합니다. 평가 화면은 아직 예시 데이터입니다.
+- 정답셋 기반 정확도 측정은 아직 하지 않았습니다. 그래서 이 문서에는 정확도 수치가 없습니다.
+- 사용 단계는 다루지 않습니다. 수송(tkm) 데이터셋의 기준 단위는 비어 있습니다.
+- 라이선스는 아직 정하지 않았습니다.
