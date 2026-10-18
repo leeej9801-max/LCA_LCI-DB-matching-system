@@ -31,6 +31,20 @@
       "source": "소요량",
       "method": "auto",
       "sample": "2.4"
+    },
+    {
+      "field": "구분",
+      "required": false,
+      "source": null,
+      "method": "missing",
+      "sample": null
+    },
+    {
+      "field": "부품번호",
+      "required": false,
+      "source": null,
+      "method": "missing",
+      "sample": null
     }
   ],
   "summary": {
@@ -57,6 +71,8 @@
     {
       "id": 1,
       "source_row": 7,
+      "input_role": null,
+      "part_no": null,
       "raw": {
         "name": "SGCC 용융아연도금강판",
         "spec": "0.8T",
@@ -103,6 +119,7 @@
             "도금 공정(용융) 일치",
             "분류 금속 일치"
           ],
+          "role": "소재",
           "veto": null,
           "duplicate_group": {
             "size": 3,
@@ -131,6 +148,7 @@
           "reasons": [
             "이름이 같아 점수가 같음"
           ],
+          "role": "소재",
           "veto": null,
           "duplicate_group": {
             "size": 3,
@@ -157,6 +175,7 @@
           "score": 0.74,
           "confidence": "보통",
           "reasons": [],
+          "role": "소재",
           "veto": {
             "rule_id": "V1",
             "reason": "도금 공정 충돌(입력 용융, 후보 전기)"
@@ -178,7 +197,8 @@
         "reference_unit": "kg",
         "score": 0.88,
         "confidence": "높음",
-        "manual": false
+        "manual": false,
+        "role": "소재"
       },
       "overrides": {},
       "review": {
@@ -198,6 +218,8 @@
     {
       "id": 2,
       "source_row": 11,
+      "input_role": null,
+      "part_no": null,
       "raw": {
         "name": "ABS 수지 펠릿",
         "spec": "",
@@ -238,6 +260,7 @@
           "reasons": [
             "수지 등급 ABS 일치"
           ],
+          "role": "소재",
           "veto": null,
           "duplicate_group": null,
           "has_xml": true,
@@ -256,7 +279,8 @@
         "reference_unit": "kg",
         "score": 0.9,
         "confidence": "높음",
-        "manual": false
+        "manual": false,
+        "role": "소재"
       },
       "overrides": {},
       "review": {
@@ -276,6 +300,8 @@
     {
       "id": 3,
       "source_row": 15,
+      "input_role": null,
+      "part_no": null,
       "raw": {
         "name": "재생 알루미늄 압출재 A6063",
         "spec": "",
@@ -317,6 +343,7 @@
           "score": 0.79,
           "confidence": "보통",
           "reasons": [],
+          "role": "소재",
           "veto": {
             "rule_id": "V2",
             "reason": "재생/신재 불일치(입력 재생, 후보 신재)"
@@ -343,6 +370,8 @@
     {
       "id": 4,
       "source_row": 19,
+      "input_role": null,
+      "part_no": null,
       "raw": {
         "name": "PC 수지",
         "spec": "",
@@ -383,6 +412,8 @@
     {
       "id": 5,
       "source_row": 23,
+      "input_role": null,
+      "part_no": null,
       "raw": {
         "name": "점용접 브라켓 어셈블리",
         "spec": "",
@@ -423,6 +454,7 @@
           "reasons": [
             "소재 강 일치"
           ],
+          "role": "소재",
           "veto": null,
           "duplicate_group": null,
           "has_xml": true,
@@ -441,7 +473,8 @@
         "reference_unit": "kg",
         "score": 0.68,
         "confidence": "보통",
-        "manual": false
+        "manual": false,
+        "role": "소재"
       },
       "overrides": {},
       "review": {
@@ -463,6 +496,8 @@
     {
       "id": 6,
       "source_row": 27,
+      "input_role": null,
+      "part_no": null,
       "raw": {
         "name": "분체도장 처리",
         "spec": "",
@@ -502,6 +537,7 @@
           "reasons": [
             "표면처리 공정 키워드 일치"
           ],
+          "role": "소재",
           "veto": null,
           "duplicate_group": null,
           "has_xml": true,
@@ -520,7 +556,8 @@
         "reference_unit": "kg",
         "score": 0.41,
         "confidence": "낮음",
-        "manual": false
+        "manual": false,
+        "role": "소재"
       },
       "overrides": {},
       "review": {
@@ -540,6 +577,8 @@
     {
       "id": 7,
       "source_row": 31,
+      "input_role": null,
+      "part_no": null,
       "raw": {
         "name": "SPCC 냉연강판 1.2T",
         "spec": "t1.2 x 120 x 340",
@@ -587,6 +626,7 @@
             "약어 SPCC가 사전에서 일치",
             "냉연 공정 일치"
           ],
+          "role": "소재",
           "veto": null,
           "duplicate_group": {
             "size": 2,
@@ -614,6 +654,7 @@
           "reasons": [
             "이름이 같아 점수가 같음"
           ],
+          "role": "소재",
           "veto": null,
           "duplicate_group": {
             "size": 2,
@@ -639,6 +680,7 @@
           "score": 0.58,
           "confidence": "보통",
           "reasons": [],
+          "role": "소재",
           "veto": {
             "rule_id": "V1",
             "reason": "냉연/열연 공정 충돌(입력 냉연, 후보 열연)"
@@ -660,7 +702,8 @@
         "reference_unit": "kg",
         "score": 0.86,
         "confidence": "높음",
-        "manual": false
+        "manual": false,
+        "role": "소재"
       },
       "overrides": {},
       "review": {
@@ -680,6 +723,8 @@
     {
       "id": 8,
       "source_row": 35,
+      "input_role": null,
+      "part_no": null,
       "raw": {
         "name": "SPCC 냉연강판 1.2T",
         "spec": "t1.2 x 80 x 200",
@@ -727,6 +772,7 @@
             "약어 SPCC가 사전에서 일치",
             "냉연 공정 일치"
           ],
+          "role": "소재",
           "veto": null,
           "duplicate_group": {
             "size": 2,
@@ -754,6 +800,7 @@
           "reasons": [
             "이름이 같아 점수가 같음"
           ],
+          "role": "소재",
           "veto": null,
           "duplicate_group": {
             "size": 2,
@@ -779,6 +826,7 @@
           "score": 0.58,
           "confidence": "보통",
           "reasons": [],
+          "role": "소재",
           "veto": {
             "rule_id": "V1",
             "reason": "냉연/열연 공정 충돌(입력 냉연, 후보 열연)"
@@ -800,7 +848,8 @@
         "reference_unit": "kg",
         "score": 0.86,
         "confidence": "높음",
-        "manual": false
+        "manual": false,
+        "role": "소재"
       },
       "overrides": {},
       "review": {
@@ -820,6 +869,8 @@
     {
       "id": 9,
       "source_row": 39,
+      "input_role": null,
+      "part_no": null,
       "raw": {
         "name": "고밀도 폴리에틸렌 HDPE",
         "spec": "",
@@ -862,6 +913,7 @@
           "reasons": [
             "수지 등급 HDPE 일치"
           ],
+          "role": "소재",
           "veto": null,
           "duplicate_group": null,
           "has_xml": true,
@@ -880,7 +932,8 @@
         "reference_unit": "kg",
         "score": 0.91,
         "confidence": "높음",
-        "manual": false
+        "manual": false,
+        "role": "소재"
       },
       "overrides": {},
       "review": {
@@ -900,6 +953,8 @@
     {
       "id": 10,
       "source_row": 43,
+      "input_role": null,
+      "part_no": null,
       "raw": {
         "name": "볼트 M6x20",
         "spec": "",
@@ -939,6 +994,8 @@
     {
       "id": 11,
       "source_row": 47,
+      "input_role": null,
+      "part_no": null,
       "raw": {
         "name": "PP 사출품 커버",
         "spec": "",
@@ -982,6 +1039,7 @@
           "reasons": [
             "수지 등급 PP 일치"
           ],
+          "role": "소재",
           "veto": null,
           "duplicate_group": null,
           "has_xml": true,
@@ -1000,7 +1058,8 @@
         "reference_unit": "kg",
         "score": 0.66,
         "confidence": "보통",
-        "manual": false
+        "manual": false,
+        "role": "소재"
       },
       "overrides": {},
       "review": {
@@ -1020,6 +1079,8 @@
     {
       "id": 12,
       "source_row": 51,
+      "input_role": null,
+      "part_no": null,
       "raw": {
         "name": "알루미늄 판재 A5052",
         "spec": "",
@@ -1061,6 +1122,7 @@
             "소재 알루미늄 일치",
             "판재 형태 일치"
           ],
+          "role": "소재",
           "veto": null,
           "duplicate_group": null,
           "has_xml": true,
@@ -1083,6 +1145,7 @@
           "reasons": [
             "소재 알루미늄 일치"
           ],
+          "role": "소재",
           "veto": null,
           "duplicate_group": null,
           "has_xml": true,
@@ -1101,7 +1164,8 @@
         "reference_unit": "kg",
         "score": 0.72,
         "confidence": "보통",
-        "manual": false
+        "manual": false,
+        "role": "소재"
       },
       "overrides": {},
       "review": {

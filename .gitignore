@@ -11,6 +11,7 @@ dist/
 .env
 .env.*
 !Frontend/.env.development
+!Frontend/.env.real
 !.env.example
 
 # Obsidian 개인 설정 (문서 자체는 추적)

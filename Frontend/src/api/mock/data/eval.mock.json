@@ -6,13 +6,13 @@
         "run_id": "eval-2",
         "status": "done",
         "created_at": "2026-10-17T14:20:00+09:00",
-        "config_label": "TF-IDF + 사전 + Veto + 동명 묶기"
+        "config_label": "TF-IDF + 사전 + 차단 + 동명 묶기"
       },
       {
         "run_id": "eval-1",
         "status": "done",
         "created_at": "2026-10-17T11:05:00+09:00",
-        "config_label": "TF-IDF 기준선만"
+        "config_label": "TF-IDF 단독"
       }
     ],
     "total": 2
@@ -51,21 +51,21 @@
       },
       "ablation": [
         {
-          "step": "M0 기준선 TF-IDF",
+          "step": "TF-IDF 단독",
           "top1": 0.72,
           "top3": null,
           "abstain_reject_rate": null,
           "state": "measured"
         },
         {
-          "step": "+ 약어·규격 사전",
+          "step": "+ 사전",
           "top1": null,
           "top3": null,
           "abstain_reject_rate": null,
           "state": "pending"
         },
         {
-          "step": "+ Veto (MVP 필수 행)",
+          "step": "+ 차단 규칙",
           "top1": null,
           "top3": null,
           "abstain_reject_rate": null,
@@ -86,7 +86,7 @@
           "state": "pending"
         },
         {
-          "step": "+ 리랭커",
+          "step": "+ 재순위",
           "top1": null,
           "top3": null,
           "abstain_reject_rate": null,
@@ -101,7 +101,7 @@
             "mock-1"
           ],
           "top1": "mock-3",
-          "reason": "Veto V1이 막지 못함: 이름에 냉연·열연 구분이 없음"
+          "reason": "차단 규칙 V1이 막지 못함: 이름에 냉연·열연 구분이 없음"
         },
         {
           "id": 2,
@@ -172,21 +172,21 @@
       },
       "ablation": [
         {
-          "step": "M0 기준선 TF-IDF",
+          "step": "TF-IDF 단독",
           "top1": 0.72,
           "top3": null,
           "abstain_reject_rate": null,
           "state": "measured"
         },
         {
-          "step": "+ 약어·규격 사전",
+          "step": "+ 사전",
           "top1": null,
           "top3": null,
           "abstain_reject_rate": null,
           "state": "pending"
         },
         {
-          "step": "+ Veto (MVP 필수 행)",
+          "step": "+ 차단 규칙",
           "top1": null,
           "top3": null,
           "abstain_reject_rate": null,
@@ -207,7 +207,7 @@
           "state": "pending"
         },
         {
-          "step": "+ 리랭커",
+          "step": "+ 재순위",
           "top1": null,
           "top3": null,
           "abstain_reject_rate": null,

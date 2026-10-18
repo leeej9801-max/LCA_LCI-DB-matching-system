@@ -1,8 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, Outlet, useMatch, useParams, useSearchParams } from 'react-router'
+import { Fragment, useEffect, useRef, useState } from 'react'
+import { Link, Navigate, Outlet, useMatch, useParams, useSearchParams } from 'react-router'
+import { isMock } from '@/api/client'
 import { exportSession, explainRow, getSession, updateRow } from '@/api/sessions'
+import DevInfo from '@/components/DevInfo'
+import Info from '@/components/Info'
+import MockNotice from '@/components/MockNotice'
+import Reason from '@/components/Reason'
+import terms, { sameName } from '@/terms'
 import { orgYearVersion } from './datasets/format'
-import { STATUS, TABS, attrLine, bulkBlock, conversionLabel, isClose } from './results/format'
+import { STATUS, TABS, attrLine, bulkBlock, conversionHint, conversionLabel, groupByPart, isClose } from './results/format'
 import { rowStatus } from './results/status'
 
 const BAR = { approved: 'ok', review: 'warn', vetoed: 'block', no_answer: 'none', rejected: 'none', excluded: 'none' }
@@ -86,17 +92,19 @@ const ResultsPage = () => {
     setResult((r) => ({ ...r, data: { ...r.data, rows: r.data.rows.map((x) => (x.id === rowId ? { ...x, explanation } : x)) } }))
   }
 
-  const download = async () => {
+  // A07: 기본 xlsx, csv 는 선택. mock 은 csv 만 낸다(형식을 가리지 않는다)
+  const download = async (format) => {
     setExportMsg(null)
     try {
-      const url = URL.createObjectURL(await exportSession(sessionId, 'csv'))
-      const a = Object.assign(document.createElement('a'), { href: url, download: `결과_${sessionId}.csv` })
-      a.click()
+      const { blob, filename } = await exportSession(sessionId, format)
+      const url = URL.createObjectURL(blob)
+      Object.assign(document.createElement('a'), { href: url, download: filename ?? `결과_${sessionId}.${format}` }).click()
       URL.revokeObjectURL(url)
     } catch (e) {
-      setExportMsg(e.detail)
+      setExportMsg(e.code === 'NO_APPROVED_ROWS' ? '승인한 행이 없습니다. 행을 승인한 뒤 내보내 주세요.' : e.detail)
     }
   }
+  const EXPORT_MOCK = isMock('/sessions')
 
   const selectedIds = selection.tab === tab.key ? selection.ids : []
   const toggleSelect = (id) =>
@@ -121,6 +129,14 @@ const ResultsPage = () => {
 
   const search = searchParams.toString() ? `?${searchParams}` : ''
   const nonZero = ['approved', 'review', 'vetoed', 'no_answer', 'rejected', 'excluded'].filter((s) => s === 'approved' || s === 'review' || count([s]) > 0)
+  // ⓘ 는 화면 안에서 처음 나오는 곳에만 (R2): 1위 불일치·같은 이름은 보이는 행 중 첫 행
+  const firstClose = visible.find(isClose)?.id
+  const grouped = rows.some((r) => r.part_no) // 부품번호가 있는 세션만 묶는다(없으면 평평한 표)
+  const groups = grouped ? groupByPart(visible, rows) : [{ key: 'all', rows: visible }]
+  const firstRole = visible.find((r) => r.input_role)?.id // 구분 ⓘ 는 첫 행에만
+  const firstCombined = visible.find((r) => r.selected?.role === '합본')?.id
+  const firstNoUnit = visible.find((r) => r.selected && r.selected.reference_unit == null)?.id
+  const firstDup = visible.find((r) => r.candidates.find((c) => c.dataset_id === r.selected_id)?.duplicate_group)?.id
 
   return (
     <>
@@ -132,18 +148,37 @@ const ResultsPage = () => {
         </div>
         <div className="actions">
           <div className="actions-row">
-            <button type="button" className="btn pri" onClick={download} disabled={!data}>승인분 내보내기</button>
-            <Link className="btn" to="/">다시 업로드</Link>
+            <button type="button" className="btn pri" onClick={() => download(EXPORT_MOCK ? 'csv' : 'xlsx')} disabled={!data}>
+              승인분 내보내기{EXPORT_MOCK ? ' (CSV)' : ''}
+            </button>
+            {!EXPORT_MOCK && <button type="button" className="btn" onClick={() => download('csv')} disabled={!data}>CSV로</button>}
+            <Link className="btn" to="/upload">다시 업로드</Link>
           </div>
           {exportMsg && <p className="err" role="alert">{exportMsg}</p>}
         </div>
       </div>
 
+      <MockNotice path="/sessions" />
+
       {result.error && !loading ? (
-        <div className="state">
-          <p className="err">오류 {result.error.status ?? '—'}: {result.error.detail}</p>
-          <button type="button" className="text-btn" onClick={() => setReload((n) => n + 1)}>다시 시도</button>
-        </div>
+        result.error.code === 'JOB_NOT_FINISHED' && result.error.meta?.job_id ? (
+          <Navigate to={`/upload?job=${encodeURIComponent(result.error.meta.job_id)}`} replace /> // 아직 매칭 중: 진행 화면으로
+        ) : result.error.code === 'SESSION_NOT_FOUND' ? (
+          <div className="state">
+            <p className="err">세션이 없거나 만료되었습니다(업로드 후 24시간).</p>
+            <Link className="btn" to="/upload">업로드로 가기</Link>
+          </div>
+        ) : result.error.code === 'JOB_FAILED' ? (
+          <div className="state">
+            <p className="err">{result.error.detail}</p>
+            <Link className="btn" to="/upload">다시 업로드</Link>
+          </div>
+        ) : (
+          <div className="state">
+            <p className="err">오류 {result.error.status ?? '—'}: {result.error.detail}</p>
+            <button type="button" className="text-btn" onClick={() => setReload((n) => n + 1)}>다시 시도</button>
+          </div>
+        )
       ) : loading ? (
         <div className="summary">불러오는 중</div>
       ) : (
@@ -151,7 +186,12 @@ const ResultsPage = () => {
           <div className="prog">
             <div>
               <b>{rows.length}행</b>
-              {nonZero.map((s) => <span key={s}> · {s === 'approved' ? '승인' : STATUS[s][0]} {count([s])}</span>)}
+              {nonZero.map((s) => (
+                <span key={s}>
+                  {' · '}<i className={`dot pb-${BAR[s]}`} aria-hidden="true" />
+                  {s === 'approved' ? terms.approved.label : STATUS[s][0]}{STATUS[s][2] && <Info term={STATUS[s][2]} />} {count([s])}
+                </span>
+              ))}
             </div>
             <div className="bar" aria-hidden="true">
               {nonZero.map((s) => <i key={s} className={`pb-${BAR[s]}`} style={{ width: `${(count([s]) / rows.length) * 100}%` }} title={`${STATUS[s][0]} ${count([s])}`} />)}
@@ -205,12 +245,23 @@ const ResultsPage = () => {
               <thead>
                 <tr>
                   {tab.key === 'review' && <th><span className="visually-hidden">선택</span></th>}
-                  <th>입력</th><th>현재 선택</th><th>신뢰도</th><th>환산</th><th>상태</th>
+                  <th>입력</th><th>현재 선택</th>
+                  <th>{terms.confidence.label}<Info term="confidence" /></th><th>{terms.conversion.label}<Info term="conversion" /></th><th>상태</th>
                   <th><span className="visually-hidden">동작</span></th>
                 </tr>
               </thead>
               <tbody>
-                {visible.map((row) => {
+                {groups.map((g) => (
+                  <Fragment key={g.key}>
+                {grouped && (
+                  <tr className="grp">
+                    <th colSpan={tab.key === 'review' ? 7 : 6} scope="colgroup">
+                      {g.part_no ? <>부품번호 {g.part_no} · {g.title}</> : '부품번호 없음'}
+                      {g.warn && <span className="grp-warn"> · 가공이 두 번 계산될 수 있음<Info term="combined" /></span>}
+                    </th>
+                  </tr>
+                )}
+                {g.rows.map((row) => {
                   const status = statusOf.get(row.id)
                   const [label, tone] = STATUS[status]
                   const current = currentText(row)
@@ -222,19 +273,22 @@ const ResultsPage = () => {
                   return (
                     <tr key={row.id} className={[String(row.id) === openId && 'sel', tab.key === 'review' && 'has-chk'].filter(Boolean).join(' ') || undefined}>
                       {tab.key === 'review' && (
-                        <td className="c-chk" title={blocked ?? undefined}>
-                          <input
-                            type="checkbox"
-                            aria-label={blocked ? `${rowName} 선택 불가: ${blocked}` : `${rowName} 선택`}
-                            disabled={blocked != null || bulk.busy}
-                            checked={selectedIds.includes(row.id)}
-                            onChange={() => toggleSelect(row.id)}
-                          />
+                        <td className="c-chk">
+                          <Reason when={blocked != null} text={`승인할 수 없는 상태: ${blocked}`}>
+                            <input
+                              type="checkbox"
+                              aria-label={`${rowName} 선택`}
+                              disabled={blocked != null || bulk.busy}
+                              checked={selectedIds.includes(row.id)}
+                              onChange={() => toggleSelect(row.id)}
+                            />
+                          </Reason>
                         </td>
                       )}
                       <td className="c-in">
                         <b>{rowName}</b>
                         <span className="sub">{[row.raw.spec, `${qty || '—'} ${row.clean.unit_display ?? row.raw.unit}`].filter(Boolean).join(' · ')}</span>
+                        {row.input_role && <span className="sub">{terms.input_role.label} {row.input_role}{row.id === firstRole && <Info term="input_role" />}</span>}
                         {(attrs || row.synonym_hits.length > 0) && (
                           <span className="sub">{attrs}{row.synonym_hits.length > 0 && `${attrs ? ' · ' : ''}사전: ${row.synonym_hits.join(', ')}`}</span>
                         )}
@@ -244,22 +298,43 @@ const ResultsPage = () => {
                           <>
                             <b>{current.sel.name}</b>
                             <span className="sub">{current.cand ? orgYearVersion(current.cand) : current.sel.category}</span>
-                            {current.cand?.duplicate_group && <span className="sub">동명 {current.cand.duplicate_group.size}건 중 {current.cand === row.candidates[0] ? '최신' : '하나'}</span>}
+                            {current.cand?.duplicate_group && (
+                              <span className="sub">
+                                {sameName(current.cand.duplicate_group.size)} 중 {current.cand === row.candidates[0] ? '최신' : '하나'}
+                                {row.id === firstDup && <Info term="duplicate_group" />}
+                              </span>
+                            )}
+                            {current.sel.role && (
+                              <span className="sub">
+                                {terms.dataset_role.label} {current.sel.role}
+                                {row.id === firstRole && <Info term="dataset_role" />}
+                                {current.sel.role === '합본' && row.id === firstCombined && <Info term="combined" />}
+                              </span>
+                            )}
+                            {current.sel.reference_unit == null && (
+                              <span className="sub">{terms.no_reference_unit.label}{row.id === firstNoUnit && <Info term="no_reference_unit" />}</span>
+                            )}
                             {current.sel.manual && <span className="sub">직접 선택</span>}
                           </>
                         ) : current}
                       </td>
-                      <td className="nowrap">
-                        {hasSel && current.sel.confidence ? <>{current.sel.confidence} {current.sel.score.toFixed(2)}{isClose(row) && ' · 1·2위 근소'}</> : '—'}
+                      <td className="c-conf">
+                        {hasSel && current.sel.confidence ? current.sel.confidence : '—'}
+                        {current.cand?.reasons.length > 0 && <span className="sub">{current.cand.reasons.join(' · ')}</span>}
+                        {isClose(row) && <span className="sub">{terms.rank_mismatch.label}{row.id === firstClose && <Info term="rank_mismatch" />}</span>}
                       </td>
-                      <td className="nowrap">{conversionLabel(row)}</td>
+                      <td className="nowrap">{conversionLabel(row)}{conversionHint(row) && <Info>{conversionHint(row)}</Info>}</td>
                       <td className="nowrap"><span className={`st ${tone}`}>● {label}</span></td>
                       <td className="nowrap">
-                        <Link className="text-btn" data-open={row.id} to={`/results/${sessionId}/rows/${row.id}${search}`}>비교·검토</Link>
+                        <Link className={status === 'approved' ? 'text-btn' : 'btn sm'} data-open={row.id} to={`/results/${sessionId}/rows/${row.id}${search}`}>
+                          {status === 'approved' ? '보기' : '후보 확인'}
+                        </Link>
                       </td>
                     </tr>
                   )
                 })}
+                  </Fragment>
+                ))}
               </tbody>
             </table>
           )}
@@ -268,8 +343,7 @@ const ResultsPage = () => {
 
       {data && <Outlet context={{ sessionId, rows, visibleIds, update, explain, search }} />}
 
-      <details className="devinfo">
-        <summary>개발 정보</summary>
+      <DevInfo>
         <p className="note">S2 · S3 · FR-801</p>
         <table className="api">
           <tbody>
@@ -280,7 +354,7 @@ const ResultsPage = () => {
             <tr><td className="i">A07</td><td className="m">GET</td><td>{'/api/sessions/{id}/export?format=xlsx'}</td></tr>
           </tbody>
         </table>
-      </details>
+      </DevInfo>
     </>
   )
 }

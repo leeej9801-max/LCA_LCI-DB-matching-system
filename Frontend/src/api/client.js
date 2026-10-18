@@ -11,9 +11,17 @@ const DEFAULT_DETAIL = {
   503: '일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.',
 }
 
+// VITE_API_MOCK=1 이면 mock, 단 VITE_API_REAL(콤마로 구분한 경로 접두사, 예 "/datasets")로 시작하는 요청은 실제 서버로.
+// VITE_API_MOCK 이 없거나 0 이면 전부 실제 서버. 어댑터는 요청마다 고른다
+const REAL = (import.meta.env.VITE_API_REAL ?? '').split(',').map((p) => p.trim()).filter(Boolean)
+// 이 경로의 요청이 mock 으로 가는지. 환경 변수는 빌드 때 정해지므로 실행 중 바뀌지 않는다 (화면의 "예시 데이터" 줄)
+export const isMock = (path) => import.meta.env.VITE_API_MOCK === '1' && !REAL.some((p) => path.startsWith(p))
+const realAdapter = axios.getAdapter(axios.defaults.adapter)
+const mixedAdapter = (config) => (REAL.some((p) => config.url?.startsWith(p)) ? realAdapter(config) : mockAdapter(config))
+
 const client = axios.create({
   baseURL: '/api',
-  ...(import.meta.env.VITE_API_MOCK === '1' && { adapter: mockAdapter }),
+  ...(import.meta.env.VITE_API_MOCK === '1' && { adapter: mixedAdapter }),
 })
 
 // 모든 오류를 { status, detail, code, meta } 하나의 모양으로 던진다.

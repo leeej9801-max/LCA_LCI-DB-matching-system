@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { getDataset } from '@/api/datasets'
+import terms from '@/terms'
 import DataQuality from './DataQuality'
-import { dash, orgYearVersion } from './format'
+import { dash, orgYearVersion, serverHint } from './format'
 
 // S4 상세 슬라이드 패널 (A06). 열릴 때와 다른 데이터셋으로 바뀔 때 패널로 포커스, Esc 로 닫기
 const DatasetDetail = ({ id, onSelect, onClose }) => {
@@ -38,7 +39,10 @@ const DatasetDetail = ({ id, onSelect, onClose }) => {
         {result.id !== id ? (
           <p className="note">불러오는 중</p>
         ) : result.error ? (
-          <p className="err">오류 {dash(result.error.status)}: {result.error.detail}</p>
+          <>
+            <p className="err">오류 {dash(result.error.status)}: {result.error.detail}</p>
+            {serverHint(result.error) && <p className="note">{serverHint(result.error)}</p>}
+          </>
         ) : (
           <>
             <dl className="kv">
@@ -48,7 +52,7 @@ const DatasetDetail = ({ id, onSelect, onClose }) => {
               <dt>데이터 종류</dt><dd>{dash(d.data_type)}</dd>
               <dt>기준흐름 단위</dt><dd>{dash(d.reference_unit)}</dd>
               <dt>같은 이름</dt><dd>{d.duplicate_count == null ? '—' : `${d.duplicate_count}건`}</dd>
-              <dt>목록 행</dt><dd>{d.list_row == null ? '—' : `행 ${d.list_row}`} · {d.has_xml ? 'XML 연결됨' : '엑셀'}</dd>
+              <dt>목록 행</dt><dd>{d.list_row == null ? '—' : `행 ${d.list_row}`} · {d.has_xml ? terms.has_xml.xml : terms.has_xml.excel}</dd>
             </dl>
             <DataQuality d={d} />
             {d.duplicates?.length > 0 && (

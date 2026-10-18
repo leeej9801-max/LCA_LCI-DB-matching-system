@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { searchDatasets } from '@/api/datasets'
-import { orgYearVersion } from './format'
+import Info from '@/components/Info'
+import terms, { sameName } from '@/terms'
+import { dash, orgYearVersion, serverHint } from './format'
 
 const PAGE_SIZE = 20
 const SORTS = [['relevance', '관련도'], ['year_desc', '연도 최신순'], ['name', '이름순']]
-const HAS_XML = [['', '전체'], ['true', 'XML 보유'], ['false', '엑셀만']]
+const HAS_XML = [['', '전체'], ['true', terms.has_xml.xml], ['false', terms.has_xml.excel]]
 
 // S4의 검색·필터·표·페이지 (A05). 검색 조건은 params(문자열 값 객체)로 받고 바꿀 때 setParams(changes, options)를 부른다.
 // S4 화면은 URL 쿼리로, S3 직접 선택 피커는 내부 상태로 조건을 들고 있다.
@@ -42,6 +44,7 @@ const DatasetBrowser = ({ params, setParams, selectedId, onRowClick, rowAction }
     if (loading || !data || offset <= lastOffset) return
     setParams({ offset: lastOffset ? String(lastOffset) : '' }, { replace: true })
   }, [loading, data, offset, lastOffset, setParams])
+  const firstDup = data?.items.find((d) => d.duplicate_count > 1)?.dataset_id // ⓘ 는 첫 행에만
   const categoryCounts = { ...Object.fromEntries(categories.map((c) => [c, 0])), ...data?.facets.category }
 
   return (
@@ -71,6 +74,7 @@ const DatasetBrowser = ({ params, setParams, selectedId, onRowClick, rowAction }
             </label>
           ))}
         </fieldset>
+        <Info term="has_xml" />
         <div className="toggles" role="group" aria-label="분류">
           {Object.entries(categoryCounts).map(([c, n]) => (
             <button key={c} type="button" className="toggle" aria-pressed={categories.includes(c)} onClick={() => toggleCategory(c)}>
@@ -87,7 +91,11 @@ const DatasetBrowser = ({ params, setParams, selectedId, onRowClick, rowAction }
         {loading ? '불러오는 중' : result.error ? '' : (
           <>
             <b>{q ? `"${q}" ` : ''}{total}건</b>
-            {params.group_duplicates !== 'false' && <span className="note">동명 묶음 적용</span>}
+            {params.group_duplicates !== 'false' && <span className="note">같은 이름은 최신 1건만 표시</span>}
+            <label className="note">
+              <input type="checkbox" checked={params.group_duplicates === 'false'} onChange={(e) => setParams({ group_duplicates: e.target.checked ? 'false' : '' })} />
+              {' '}같은 이름 모두 보기
+            </label>
           </>
         )}
       </div>
@@ -95,12 +103,14 @@ const DatasetBrowser = ({ params, setParams, selectedId, onRowClick, rowAction }
       {result.error && !loading ? (
         <div className="state">
           <p className="err">오류 {result.error.status ?? '—'}: {result.error.detail}</p>
+          {serverHint(result.error) && <p className="note">{serverHint(result.error)}</p>}
           <button type="button" className="text-btn" onClick={() => setReload((n) => n + 1)}>다시 시도</button>
         </div>
       ) : data && total === 0 && !loading ? (
         <div className="state"><p>일치하는 데이터셋 없음.</p></div>
       ) : data && (
         <>
+          <p className="note">{terms.has_xml.xml}는 투입·산출 상세로 계산할 수 있고, {terms.has_xml.excel}은 목록 정보만 있어 이후 계산에서 빠집니다.</p>
           <table className="tbl">
             <thead>
               <tr>
@@ -127,12 +137,14 @@ const DatasetBrowser = ({ params, setParams, selectedId, onRowClick, rowAction }
                 >
                   <td>
                     <b>{d.name}</b>
-                    {d.duplicate_count > 1 && <span className="dup">동명 {d.duplicate_count}건</span>}
-                    <span className="sub">{d.name_en}</span>
+                    {d.duplicate_count > 1 && (
+                      <span className="dup">{sameName(d.duplicate_count)}{d.dataset_id === firstDup && <Info term="duplicate_group" />}</span>
+                    )}
+                    <span className="sub">{dash(d.name_en)}</span>
                   </td>
                   <td className="nowrap">{d.category}</td>
                   <td>{orgYearVersion(d)}</td>
-                  <td className="nowrap">{d.has_xml ? <span className="fmt xml">● XML</span> : <span className="fmt xls">○ 엑셀만</span>}</td>
+                  <td className="nowrap">{d.has_xml ? <span className="fmt xml">● {terms.has_xml.xml}</span> : <span className="fmt xls">○ {terms.has_xml.excel}</span>}</td>
                   {rowAction && <td className="nowrap">{rowAction(d)}</td>}
                 </tr>
               ))}
