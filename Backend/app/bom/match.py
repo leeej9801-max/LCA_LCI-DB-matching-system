@@ -81,6 +81,7 @@ def match_project(conn, project_id, embedder, progress=lambda done, total: None,
     items = conn.execute("SELECT query_key, norm_text, input_role FROM bom_item WHERE project_id = %s AND norm_text <> '' ORDER BY row_no",
                          (project_id,)).fetchall()
     queries = {key: (text, role) for key, text, role in items}  # 같은 query_key 는 한 번만
+    progress(0, len(queries))  # 임베딩이 오래 걸려도 "후보 검색"의 total 이 처음부터 보인다(T9b.2)
     version_id, model_name, idx_items = load_index(conn)  # 작업 시작 때 한 번
     if embedder.model_name != model_name:
         raise RuntimeError(f"인덱스 {version_id}의 모델은 {model_name}인데 임베더는 {embedder.model_name}입니다")

@@ -113,13 +113,29 @@ def test_match_dedupes_queries_caches_and_stores_20(bomdb, monkeypatch):
     progress = []
     with psycopg.connect(bomdb) as conn:
         r = match.match_project(conn, sid, emb, progress=lambda d, t: progress.append((d, t)))
-    assert (r["queries"], r["cache_hits"]) == (2, 0) and calls == {"tfidf": 2, "dense": 2} and progress == [(1, 2), (2, 2)]
+    assert (r["queries"], r["cache_hits"]) == (2, 0) and calls == {"tfidf": 2, "dense": 2} and progress == [(0, 2), (1, 2), (2, 2)]
     assert sum(len(c) for c in emb.calls) == 2
     with psycopg.connect(bomdb) as conn:
         r2 = match.match_project(conn, add_session(bomdb, ["냉연강판"], "zzzzzzzzzzzz"), emb)
         counts = conn.execute("SELECT query_key, count(*) FROM match_candidate WHERE run_id = %s GROUP BY 1", (r["run_id"],)).fetchall()
     assert r2["cache_hits"] == 1 and sum(len(c) for c in emb.calls) == 2  # 두 번째 세션은 캐시 적중, 임베딩 호출 없음
     assert sorted(n for _, n in counts) == [20, 20]  # 질의마다 상위 20
+
+
+@needs_db
+def test_progress_total_is_known_before_embedding(bomdb):
+    """T9b.2: 첫 진행 보고는 (0, N)이고 N>0 이며, 임베딩 호출보다 먼저 나온다."""
+    events = []
+
+    class Recording(FakeEmbedder):
+        def embed(self, texts):
+            events.append("embed")
+            return super().embed(texts)
+    sid = add_session(bomdb, ["냉연강판", "열연강판", "냉연강판"])
+    with psycopg.connect(bomdb) as conn:
+        match.CACHE.data.clear()
+        match.match_project(conn, sid, Recording(), progress=lambda d, t: events.append((d, t)))
+    assert events[0] == (0, 2) and events.index("embed") > 0
 
 
 @needs_db

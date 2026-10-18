@@ -24,7 +24,7 @@ const PanelBody = ({ row, update, explain, nextHref }) => {
       setConfirmId(null)
       return true
     } catch (e) {
-      setError(e.detail)
+      setError(e) // { detail, code, meta }: OUT_OF_RANGE 는 입력칸 옆에, CONVERSION_INCOMPLETE 는 승인 버튼 옆에 보인다
       return false
     } finally {
       setBusy(false)
@@ -37,7 +37,7 @@ const PanelBody = ({ row, update, explain, nextHref }) => {
     try {
       await explain(row.id)
     } catch (e) {
-      setError(e.detail)
+      setError(e)
     } finally {
       setBusy(false)
     }
@@ -70,6 +70,7 @@ const PanelBody = ({ row, update, explain, nextHref }) => {
           {done.text}{done.next && nextHref && <> · <Link to={nextHref}>다음 행 →</Link></>}
         </p>
       )}
+      {error && !['OUT_OF_RANGE', 'CONVERSION_INCOMPLETE'].includes(error.code) && <p className="err" role="alert">{error.detail}</p>}
       {approved && !done && <p className="banner">승인됨: {row.selected.name} · 변경하려면 다른 후보 승인</p>}
 
       <section className="sec">

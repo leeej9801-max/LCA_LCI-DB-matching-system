@@ -25,4 +25,11 @@ export const updateRow = (id, rowId, patch) => client.patch(`${base(id)}/rows/${
 
 export const explainRow = (id, rowId) => client.post(`${base(id)}/rows/${encodeURIComponent(rowId)}/explain`).then((r) => r.data) // A04
 
-export const exportSession = (id, format = 'csv') => client.get(`${base(id)}/export`, { params: { format }, responseType: 'blob' }).then((r) => r.data) // A07
+// A07. { blob, filename }: 파일명은 Content-Disposition 의 filename*(UTF-8, RFC 5987)을, 없으면 filename 을 쓴다. 헤더가 없으면(mock) filename 은 null
+export const exportSession = (id, format = 'xlsx') =>
+  client.get(`${base(id)}/export`, { params: { format }, responseType: 'blob' }).then((r) => {
+    const cd = r.headers?.['content-disposition'] ?? ''
+    const star = /filename\*=UTF-8''([^;]+)/i.exec(cd)
+    const plain = /filename="?([^";]+)"?/i.exec(cd)
+    return { blob: r.data, filename: star ? decodeURIComponent(star[1]) : plain ? plain[1] : null }
+  })

@@ -1,5 +1,6 @@
 import DataQuality from '../datasets/DataQuality'
-import { dash, orgYearVersion } from '../datasets/format'
+import { orgYearVersion } from '../datasets/format'
+import Info from '@/components/Info'
 import terms, { sameName } from '@/terms'
 
 // 후보 1~3순위 나란히 비교. 열마다 같은 항목이 같은 높이에 오도록 subgrid로 행을 맞춘다 (열마다 칸 11개 — lcim.css `.cand`의 span 11과 같아야 한다)
@@ -9,9 +10,15 @@ const CandidateGrid = ({ cands, selectedId, busy, confirmId, setConfirmId, onApp
     {cands.map((c, i) => (
       <section key={c.dataset_id} className={c.veto ? 'cand veto' : 'cand'} aria-label={`${i + 1}순위 후보`}>
         <div className="cell"><span className="lb">{i + 1}순위{c.veto && ' · 차단'}{c.dataset_id === selectedId && ' · 현재 선택'}</span><b>{c.name}</b><span className="sub">{c.name_en}</span></div>
-        <div className="cell"><span className="lb">분류</span>{c.category}</div>
+        <div className="cell">
+          <span className="lb">분류 · {terms.dataset_role.label}</span>{c.category}{c.role && ` · ${c.role}`}
+          {c.role === '합본' && i === cands.findIndex((x) => x.role === '합본') && <Info term="combined" />}
+        </div>
         <div className="cell"><span className="lb">기관 · 연도 · 버전</span>{orgYearVersion(c)}</div>
-        <div className="cell"><span className="lb">{terms.reference_flow.label}</span>{dash(c.reference_unit)}</div>
+        <div className="cell"><span className="lb">{terms.reference_flow.label}</span>
+          {c.reference_unit == null
+            ? <>{terms.no_reference_unit.label}{i === cands.findIndex((x) => x.reference_unit == null) && <Info term="no_reference_unit" />}</>
+            : c.reference_unit}</div>
         <div className="cell"><span className="lb">보유 형태</span>{c.has_xml ? `● ${terms.has_xml.xml}` : `○ ${terms.has_xml.excel}`}</div>
         <div className="cell"><DataQuality d={c} /></div>
         <div className="cell"><span className="lb">{terms.confidence.label}</span>{c.confidence}</div>

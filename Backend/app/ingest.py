@@ -29,6 +29,7 @@ ROLE_MIGRATION = "0006_role.sql"
 NAME_CHECK_MIN = 0.10  # exact 인데 이름 점검 점수가 이보다 낮으면 name_mismatch(사람이 본다)
 GATE_TO_GATE = re.compile(r"gate[\s-]*to[\s-]*gate", re.I)
 
+SEED = roles.load_seed()
 COLUMNS = ["dataset_id", "list_sn", "ilcd_uuid", "name_ko", "name_en", "category", "developer", "dev_year", "version", "has_xml",
            "reference_year", "geography", "tech_description", "allocation", "cutoff", "dataset_type", "ref_flow_name",
            "ref_flow_unit", "ref_flow_amount", "system_boundary", "source_file", "source_hash"]
@@ -107,6 +108,10 @@ def build(rows, mapping, features):
         feat = features.get(link["file"]) or next((v for s, v in by_sha.items() if s.startswith(link["sha"])), None) or {}
         kind = link["kind"]
         ref = feat.get("ref_flow") or None
+        if ref and ref.get("estimated") and roles.role_of(ds["name_ko"], ds["category"], SEED) == "transport":
+            # 수송의 출력은 제품이 아니라 서비스(사람·km, 톤·km)라 "양 1.0 비요소 출력" 추정이 맞지 않는다(T13.2)
+            issue(ds, "ref_flow_estimate_skipped", "info", "수송 데이터셋은 기준 흐름을 추정하지 않음", {"estimated_name": ref.get("name")})
+            ref = None
         ds.update(source_file=link["file"], source_hash=feat.get("sha") or link["sha"], has_xml=kind == "xml")
         if kind == "xml":
             ds.update(ilcd_uuid=text(feat.get("uuid")), reference_year=feat.get("reference_year"), geography=text(feat.get("geography")),

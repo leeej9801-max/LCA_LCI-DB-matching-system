@@ -130,6 +130,8 @@ a.btn{text-decoration:none}
 .err-list{margin:4px 0 0;padding-left:18px;color:var(--block);font-size:13px}
 .rows td.c-chk{width:32px;padding-right:0}
 .rows .sub{margin-top:1px}
+.rows td.c-conf{min-width:16em;max-width:30em} /* 실제 근거 문장은 길다: 줄바꿈하고 앞 두 열을 밀어내지 않는다 */
+.rows td.c-in,.rows td.c-cand{min-width:11em}
 .st{white-space:nowrap}
 .st.ok{color:var(--ok)}
 .st.warn{color:var(--warn)}
@@ -227,6 +229,15 @@ a.btn{text-decoration:none}
 .flow li{position:relative;flex:1 1 150px;min-width:0;padding:10px 12px;border:1px solid var(--ctl);border-radius:6px}
 .flow li:not(:last-child)::after{content:"→";position:absolute;right:-20px;top:50%;transform:translateY(-50%);color:var(--muted)}
 .flow b{display:block}
+
+/* 부품번호 묶음 머리, 선택 열 영역 (F2) */
+.tbl tr.grp th{padding:10px 12px 4px;border-bottom:1px solid var(--line);background:var(--bg2);color:var(--ink);font-size:13px;font-weight:600;white-space:normal}
+.grp-warn{color:var(--warn);font-weight:400}
+.optcols{display:flex;flex-direction:column;gap:6px}
+.optcols summary{cursor:pointer;color:var(--navy);font-size:13px}
+.badge{display:inline-block;padding:0 8px;border:1px solid var(--ctl);border-radius:6px;font-size:12px;font-weight:600}
+.badge.warn{color:var(--warn)}
+.badge.block{color:var(--block)}
 
 /* ⓘ 설명·꺼진 이유·예시 데이터 줄 (U3, ux-revision-2 R2~R4). 새 색은 쓰지 않는다 */
 .info{display:inline-block;margin-left:3px;vertical-align:baseline}

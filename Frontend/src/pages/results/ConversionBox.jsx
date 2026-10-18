@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import Info from '@/components/Info'
+import terms from '@/terms'
 import { conversionDone } from './format'
 
 // conversion.missing 의 이름 → 입력란. 범위는 명세(A03)와 같다. 환산 계산은 서버(mock) 몫이고 화면은 값만 보낸다
@@ -16,6 +18,10 @@ const ConversionBox = ({ row, busy, error, onCheck, onApprove }) => {
 
   const needed = c?.status === 'needs_info' ? FIELDS.filter((f) => c.missing.includes(f.missing)) : []
   const approved = row.review.status === 'approved'
+  const rangeField = error?.code === 'OUT_OF_RANGE' ? error.meta?.field : null // 400: 해당 입력칸 옆에
+  const incomplete = error?.code === 'CONVERSION_INCOMPLETE' // 409: 승인 버튼 옆에
+  const stateBadge = c?.status === 'needs_info' ? ['warn', terms.conversion.states.needsBadge]
+    : c?.status === 'incompatible' ? ['block', terms.conversion.states.incompatible] : null
 
   const submit = (e) => {
     e.preventDefault()
@@ -27,13 +33,18 @@ const ConversionBox = ({ row, busy, error, onCheck, onApprove }) => {
 
   return (
     <section className="sec" id="conv">
-      <h3>환산 상태</h3>
-      {row.selected && <p className="note">선택: {row.selected.name}{row.selected.manual && ' · 직접 선택'}</p>}
+      <h3>환산 상태<Info term="conversion" /></h3>
+      {row.selected && (
+        <p className="note">
+          선택: {row.selected.name}{row.selected.manual && ' · 직접 선택'}
+          {row.selected.reference_unit == null && <> · {terms.no_reference_unit.label}<Info term="no_reference_unit" /></>}
+        </p>
+      )}
       {!c ? (
         <p className="note">후보를 선택하면 환산 결과가 표시됩니다.</p>
       ) : (
         <>
-          <p><b>{c.message}</b></p>
+          {conversionDone(row) && <p><b>{c.message}</b></p>}
           {conversionDone(row) && <p>{c.value} {c.unit}{c.method && <span className="note"> · {c.method}</span>}</p>}
           {c.status === 'incompatible' && <p>이 행은 제외하거나 다른 후보를 고르세요.</p>}
           {needed.length > 0 && (
@@ -51,7 +62,7 @@ const ConversionBox = ({ row, busy, error, onCheck, onApprove }) => {
                       }}
                       aria-invalid={!!problem[f.key]} aria-describedby={`${f.id}-err`}
                     />
-                    <span id={`${f.id}-err`} className="err" role="alert">{problem[f.key]}</span>
+                    <span id={`${f.id}-err`} className="err" role="alert">{problem[f.key] ?? (rangeField === f.key ? error.detail : '')}</span>
                   </div>
                 ))}
               </div>
@@ -60,12 +71,19 @@ const ConversionBox = ({ row, busy, error, onCheck, onApprove }) => {
           )}
         </>
       )}
-      {error && <p className="err" role="alert">{error}</p>}
+      {error && rangeField && !needed.some((f) => f.key === rangeField) && <p className="err" role="alert">{error.detail}</p>}
       {row.selected && (
-        <div>
+        <div className="flex-row">
           <button type="button" className="btn pri sm" disabled={busy || approved || !conversionDone(row)} onClick={onApprove}>
             {approved ? '승인됨' : '현재 선택 승인'}
           </button>
+          {stateBadge && <span className={`badge ${stateBadge[0]}`}>{stateBadge[1]}</span>}
+          {!conversionDone(row) && c && !approved && (
+            <span className="note">
+              {c.message}{c.missing.length > 0 && ` (필요: ${c.missing.join(', ')})`}
+            </span>
+          )}
+          {incomplete && <span className="err" role="alert">{error.detail}</span>}
         </div>
       )}
     </section>

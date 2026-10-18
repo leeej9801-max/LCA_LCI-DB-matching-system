@@ -63,4 +63,24 @@ export const bulkBlock = (row) => {
   return null
 }
 
+// 부품번호(part_no)가 있는 세션은 부품번호로 묶는다(T13). 묶음 머리: 부품번호 + 소재 행 품명(없으면 첫 행).
+// 합본 데이터셋을 고른 소재 행과 같은 부품번호에 공정 행이 있으면 warn(가공이 두 번 계산될 수 있음). all 은 탭에 가려진 행까지 본다
+export const groupByPart = (visible, all) => {
+  const groups = new Map()
+  for (const r of visible) {
+    const key = r.part_no ?? ''
+    if (!groups.has(key)) groups.set(key, { key: key || '(없음)', part_no: r.part_no, rows: [] })
+    groups.get(key).rows.push(r)
+  }
+  return [...groups.values()].map((g) => {
+    const members = g.part_no ? all.filter((r) => r.part_no === g.part_no) : []
+    const material = members.find((r) => r.input_role === '소재') ?? g.rows[0]
+    return {
+      ...g,
+      title: material.clean.name || material.raw.name,
+      warn: members.some((r) => r.input_role === '소재' && r.selected?.role === '합본') && members.some((r) => r.input_role === '공정'),
+    }
+  })
+}
+
 export const conversionDone = (row) => ['ok', 'converted'].includes(row.conversion?.status)

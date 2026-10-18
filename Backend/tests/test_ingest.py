@@ -157,3 +157,23 @@ def test_ref_flow_flags_become_issues(inputs):
     assert by["list-8"]["flow_property_missing"] == ("warning", "흐름 속성 정의 없음: 0000-fp", {"uuid": "0000-fp"})
     assert "unit_blank" in by["list-8"]
     assert "ref_flow_estimated" not in by.get("list-2", {}) and "flow_property_missing" not in by.get("list-2", {})
+
+
+def test_estimate_is_skipped_for_transport_only(inputs):
+    """T13.2: 기준 흐름을 추정한 행이 수송 데이터셋이면 비워 두고 이슈를 남기고, 수송이 아니면 지금처럼 채운다."""
+    from app.ingest import read_inputs
+    rows, mapping, features = read_inputs(inputs["list_path"], inputs["map_path"], inputs["features_path"])
+    for r in rows:
+        if r["lci_database_sn"] == "6":
+            r["category"] = "수송"  # 6=경유 → 수송으로 바꿔 본다
+    for f in ("LCI-2022-001.zip", "LCI-2022-006.zip"):
+        features.setdefault(f, features["LCI-2022-001.zip"])
+    features["LCI-2022-006.zip"] = {**features["LCI-2022-001.zip"], "ref_flow": {**features["LCI-2022-001.zip"]["ref_flow"], "estimated": True}}
+    features["LCI-2022-001.zip"] = {**features["LCI-2022-001.zip"], "ref_flow": {**features["LCI-2022-001.zip"]["ref_flow"], "estimated": True}}
+    mapping.append({**next(m for m in mapping if m["list_row"] == "1"), "file": "LCI-2022-006.zip", "list_row": "6"})
+    datasets, issues = build(rows, mapping, features)
+    by = {d["list_sn"]: d for d in datasets}
+    codes = {(ds, c) for ds, c, *_ in issues}
+    assert by[6]["ref_flow_unit"] is None and by[6]["ref_flow_name"] is None and ("list-6", "ref_flow_estimate_skipped") in codes
+    assert ("list-6", "ref_flow_estimated") not in codes
+    assert by[1]["ref_flow_unit"] == "kg" and ("list-1", "ref_flow_estimated") in codes and ("list-1", "ref_flow_estimate_skipped") not in codes

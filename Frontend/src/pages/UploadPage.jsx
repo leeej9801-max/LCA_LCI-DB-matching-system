@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
+import { isMock } from '@/api/client'
 import { getJob } from '@/api/jobs'
 import { createSession, getSampleCsv, getTemplate, previewUpload } from '@/api/sessions'
 import DevInfo from '@/components/DevInfo'
@@ -7,8 +8,11 @@ import Info from '@/components/Info'
 import MockNotice from '@/components/MockNotice'
 import Reason from '@/components/Reason'
 import terms from '@/terms'
+import { retryable, uploadErrorText } from './upload/errorText'
 
-const MOCK = import.meta.env.VITE_API_MOCK === '1'
+const SESSIONS_MOCK = isMock('/sessions') // mock 모드: 샘플이 미리 계산된 결과로 바로 열린다. 실제 모드: A08 → A01 → A21 폴링
+const TEMPLATE_MOCK = isMock('/template.xlsx')
+const OPTIONAL_COLS = ['구분', '부품번호'] // 선택 열(T13): 없어도 "확인 필요"로 세지 않고 접힌 영역에 둔다
 const SAMPLE_NAME = '부품BOM_샘플.csv' // mock은 이 이름이면 미리 계산된 결과로 본다 (spec/08 §7)
 const STAGE_STATE = { queued: '대기', running: '진행 중', succeeded: '완료' }
 // 드롭 영역의 양식 예시 (샘플 BOM 의 행). [품명, 규격, 단위, 수량]
@@ -24,13 +28,14 @@ const saveBlob = (blob, name) => {
 const UploadPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const inputRef = useRef(null)
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null) // A20 응답
   const [picks, setPicks] = useState({}) // 사람이 고른 대응 { 필드: 파일 컬럼명 | '' }
   const [error, setError] = useState(null) // { detail, retry? } 파일 영역 바로 아래 한 줄
   const [busy, setBusy] = useState(false)
-  const [run, setRun] = useState(null) // { jobId, job? }
+  const [run, setRun] = useState(() => (searchParams.get('job') ? { jobId: searchParams.get('job') } : null)) // { jobId, job? }. ?job= 은 결과 화면(409 JOB_NOT_FINISHED)에서 돌아온 경우
   const [over, setOver] = useState(false)
 
   const reset = () => { setPreview(null); setPicks({}); setError(null); setRun(null) }
@@ -42,7 +47,7 @@ const UploadPage = () => {
     try {
       setPreview(await previewUpload(f))
     } catch (e) {
-      setError({ detail: e.detail })
+      setError({ detail: uploadErrorText(e) })
     } finally {
       setBusy(false)
     }
@@ -61,7 +66,7 @@ const UploadPage = () => {
       const { job_id: id } = await createSession(f, mapping)
       setRun({ jobId: id })
     } catch (e) {
-      setError({ detail: e.detail, retry: e.status === 429 ? () => start(f, mapping) : undefined })
+      setError({ detail: uploadErrorText(e), retry: retryable(e) ? () => start(f, mapping) : undefined })
     } finally {
       setBusy(false)
     }
@@ -76,7 +81,7 @@ const UploadPage = () => {
       setFile(sample)
       await start(sample)
     } catch (e) {
-      setError({ detail: e.detail })
+      setError({ detail: uploadErrorText(e), retry: retryable(e) ? trySample : undefined })
       setBusy(false)
     }
   }
@@ -96,7 +101,7 @@ const UploadPage = () => {
     try {
       saveBlob(await get(), name)
     } catch (e) {
-      setError({ detail: e.detail })
+      setError({ detail: uploadErrorText(e) })
     }
   }
 
@@ -107,22 +112,22 @@ const UploadPage = () => {
     let ignore = false
     let timer
     const t0 = Date.now()
-    const fail = (detail) => {
+    const fail = (detail, again = true) => {
       setRun(null)
-      setError({ detail, retry: () => start(file, picksToMapping()) })
+      setError({ detail, retry: file && again ? () => start(file, picksToMapping()) : undefined }) // 파일을 모르는 채 돌아온 진행 화면(?job=)은 다시 올려야 한다
     }
     const tick = async () => {
       try {
         const job = await getJob(jobId)
         if (ignore) return
         if (job.state === 'succeeded') navigate(`/results/${job.result.session_id}`)
-        else if (job.state === 'failed') fail(job.error?.detail ?? '매칭에 실패했습니다.')
+        else if (job.state === 'failed') fail(job.error?.detail ?? '매칭에 실패했습니다.')  // detail 은 서버 문구(예: Ollama 에 접속하지 못했습니다)
         else {
           setRun({ jobId, job })
           timer = setTimeout(tick, Date.now() - t0 < 10000 ? 1000 : 3000)
         }
       } catch (e) {
-        if (!ignore) fail(e.detail)
+        if (!ignore) fail(uploadErrorText(e), retryable(e))
       }
     }
     tick()
@@ -135,8 +140,11 @@ const UploadPage = () => {
   const sourceOf = (m) => (m.field in picks ? picks[m.field] || null : m.source)
   const mapped = mapping.filter(sourceOf)
   const missingRequired = mapping.filter((m) => m.required && !sourceOf(m))
-  const missingOptional = mapping.filter((m) => !m.required && !sourceOf(m))
-  const pickable = mapping.filter((m) => m.method === 'missing') // 자동으로 못 찾은 필드만 드롭다운
+  const optionalCols = mapping.filter((m) => OPTIONAL_COLS.includes(m.field))
+  const missingOptional = mapping.filter((m) => !m.required && !sourceOf(m) && !OPTIONAL_COLS.includes(m.field)) // 선택 열은 세지 않는다
+  const pickable = mapping.filter((m) => m.method === 'missing' && !OPTIONAL_COLS.includes(m.field)) // 자동으로 못 찾은 필드만 드롭다운
+  const optionalPickable = optionalCols.filter((m) => m.method === 'missing')
+  const optionalFound = optionalCols.filter(sourceOf)
   const fieldOf = (col) => mapping.find((m) => sourceOf(m) === col)?.field
   const working = busy || !!run
 
@@ -184,8 +192,8 @@ const UploadPage = () => {
           <p className="note">샘플 BOM으로 바로 매칭해 결과 화면을 엽니다</p>
           <button type="button" className="text-btn" disabled={working} onClick={() => download(getSampleCsv, SAMPLE_NAME)}>예시 파일 내려받기</button>
           <p className="note">값이 채워진 샘플 BOM(CSV)을 받아 열어 봅니다</p>
-          <Reason when={MOCK} text="곧 제공됩니다">
-            <button type="button" className="text-btn" disabled={MOCK || working} onClick={() => download(getTemplate, 'BOM_양식.xlsx')}>빈 양식 내려받기</button>
+          <Reason when={TEMPLATE_MOCK} text="곧 제공됩니다">
+            <button type="button" className="text-btn" disabled={TEMPLATE_MOCK || working} onClick={() => download(getTemplate, 'BOM_양식.xlsx')}>빈 양식 내려받기</button>
           </Reason>
           <p className="note">열 이름만 있는 엑셀 양식에 내 BOM을 채웁니다</p>
         </div>
@@ -211,6 +219,36 @@ const UploadPage = () => {
             <Info>회사마다 BOM 열 이름이 달라서, 어느 열이 품명·규격·단위·수량인지 맞춰 둡니다.</Info>
             <span className="note">{preview.rows_total}행 · 앞 5행 미리보기</span>
           </p>
+
+          <div className="optcols">
+            <p className="note">
+              {optionalFound.length > 0
+                ? <>선택 열 인식: {optionalFound.map((m) => `${m.field}=${sourceOf(m)}`).join(', ')}</>
+                : '선택 열(구분·부품번호)이 없습니다. 없으면 소재·공정을 가리지 않고 찾습니다.'}
+              <Info term="input_role" />
+            </p>
+            {optionalPickable.length > 0 && (
+              <details>
+                <summary>선택 열(구분·부품번호) 직접 고르기</summary>
+                <div className="row-inputs">
+                  {optionalPickable.map((m) => (
+                    <div className="field" key={m.field}>
+                      <label className="lb" htmlFor={`map-${m.field}`}>{m.field} (선택)</label>
+                      <select
+                        id={`map-${m.field}`} className="inp" value={picks[m.field] ?? ''}
+                        onChange={(e) => setPicks({ ...picks, [m.field]: e.target.value })}
+                      >
+                        <option value="">컬럼 고르기</option>
+                        {preview.file_columns
+                          .filter((c) => c === picks[m.field] || !mapping.some((o) => sourceOf(o) === c))
+                          .map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
 
           {pickable.length > 0 && (
             <div className="row-inputs">
@@ -268,7 +306,7 @@ const UploadPage = () => {
 
       <DevInfo>
         <p className="note">S1 · FR-301</p>
-        {MOCK && <p className="note">mock: 예시 결과로 이동합니다 · <Link to="/results/7f3a9c21d0b4">예시 세션 열기</Link></p>}
+        {SESSIONS_MOCK && <p className="note">mock: 예시 결과로 이동합니다 · <Link to="/results/7f3a9c21d0b4">예시 세션 열기</Link></p>}
         <table className="api">
           <tbody>
             <tr><td className="i">A20<b>+</b></td><td className="m">POST</td><td>{'/api/sessions/preview'}</td></tr>
