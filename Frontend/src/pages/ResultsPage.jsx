@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useMatch, useParams, useSearchParams } from 'react-router'
 import { exportSession, explainRow, getSession, updateRow } from '@/api/sessions'
+import DevInfo from '@/components/DevInfo'
+import Info from '@/components/Info'
+import MockNotice from '@/components/MockNotice'
+import Reason from '@/components/Reason'
+import terms, { sameName } from '@/terms'
 import { orgYearVersion } from './datasets/format'
-import { STATUS, TABS, attrLine, bulkBlock, conversionLabel, isClose } from './results/format'
+import { STATUS, TABS, attrLine, bulkBlock, conversionHint, conversionLabel, isClose } from './results/format'
 import { rowStatus } from './results/status'
 
 const BAR = { approved: 'ok', review: 'warn', vetoed: 'block', no_answer: 'none', rejected: 'none', excluded: 'none' }
@@ -121,6 +126,9 @@ const ResultsPage = () => {
 
   const search = searchParams.toString() ? `?${searchParams}` : ''
   const nonZero = ['approved', 'review', 'vetoed', 'no_answer', 'rejected', 'excluded'].filter((s) => s === 'approved' || s === 'review' || count([s]) > 0)
+  // ⓘ 는 화면 안에서 처음 나오는 곳에만 (R2): 1위 불일치·같은 이름은 보이는 행 중 첫 행
+  const firstClose = visible.find(isClose)?.id
+  const firstDup = visible.find((r) => r.candidates.find((c) => c.dataset_id === r.selected_id)?.duplicate_group)?.id
 
   return (
     <>
@@ -133,11 +141,13 @@ const ResultsPage = () => {
         <div className="actions">
           <div className="actions-row">
             <button type="button" className="btn pri" onClick={download} disabled={!data}>승인분 내보내기</button>
-            <Link className="btn" to="/">다시 업로드</Link>
+            <Link className="btn" to="/upload">다시 업로드</Link>
           </div>
           {exportMsg && <p className="err" role="alert">{exportMsg}</p>}
         </div>
       </div>
+
+      <MockNotice path="/sessions" />
 
       {result.error && !loading ? (
         <div className="state">
@@ -151,7 +161,12 @@ const ResultsPage = () => {
           <div className="prog">
             <div>
               <b>{rows.length}행</b>
-              {nonZero.map((s) => <span key={s}> · {s === 'approved' ? '승인' : STATUS[s][0]} {count([s])}</span>)}
+              {nonZero.map((s) => (
+                <span key={s}>
+                  {' · '}<i className={`dot pb-${BAR[s]}`} aria-hidden="true" />
+                  {s === 'approved' ? terms.approved.label : STATUS[s][0]}{STATUS[s][2] && <Info term={STATUS[s][2]} />} {count([s])}
+                </span>
+              ))}
             </div>
             <div className="bar" aria-hidden="true">
               {nonZero.map((s) => <i key={s} className={`pb-${BAR[s]}`} style={{ width: `${(count([s]) / rows.length) * 100}%` }} title={`${STATUS[s][0]} ${count([s])}`} />)}
@@ -205,7 +220,8 @@ const ResultsPage = () => {
               <thead>
                 <tr>
                   {tab.key === 'review' && <th><span className="visually-hidden">선택</span></th>}
-                  <th>입력</th><th>현재 선택</th><th>신뢰도</th><th>환산</th><th>상태</th>
+                  <th>입력</th><th>현재 선택</th>
+                  <th>{terms.confidence.label}<Info term="confidence" /></th><th>{terms.conversion.label}<Info term="conversion" /></th><th>상태</th>
                   <th><span className="visually-hidden">동작</span></th>
                 </tr>
               </thead>
@@ -222,14 +238,16 @@ const ResultsPage = () => {
                   return (
                     <tr key={row.id} className={[String(row.id) === openId && 'sel', tab.key === 'review' && 'has-chk'].filter(Boolean).join(' ') || undefined}>
                       {tab.key === 'review' && (
-                        <td className="c-chk" title={blocked ?? undefined}>
-                          <input
-                            type="checkbox"
-                            aria-label={blocked ? `${rowName} 선택 불가: ${blocked}` : `${rowName} 선택`}
-                            disabled={blocked != null || bulk.busy}
-                            checked={selectedIds.includes(row.id)}
-                            onChange={() => toggleSelect(row.id)}
-                          />
+                        <td className="c-chk">
+                          <Reason when={blocked != null} text={`승인할 수 없는 상태: ${blocked}`}>
+                            <input
+                              type="checkbox"
+                              aria-label={`${rowName} 선택`}
+                              disabled={blocked != null || bulk.busy}
+                              checked={selectedIds.includes(row.id)}
+                              onChange={() => toggleSelect(row.id)}
+                            />
+                          </Reason>
                         </td>
                       )}
                       <td className="c-in">
@@ -244,18 +262,27 @@ const ResultsPage = () => {
                           <>
                             <b>{current.sel.name}</b>
                             <span className="sub">{current.cand ? orgYearVersion(current.cand) : current.sel.category}</span>
-                            {current.cand?.duplicate_group && <span className="sub">동명 {current.cand.duplicate_group.size}건 중 {current.cand === row.candidates[0] ? '최신' : '하나'}</span>}
+                            {current.cand?.duplicate_group && (
+                              <span className="sub">
+                                {sameName(current.cand.duplicate_group.size)} 중 {current.cand === row.candidates[0] ? '최신' : '하나'}
+                                {row.id === firstDup && <Info term="duplicate_group" />}
+                              </span>
+                            )}
                             {current.sel.manual && <span className="sub">직접 선택</span>}
                           </>
                         ) : current}
                       </td>
                       <td className="nowrap">
-                        {hasSel && current.sel.confidence ? <>{current.sel.confidence} {current.sel.score.toFixed(2)}{isClose(row) && ' · 1·2위 근소'}</> : '—'}
+                        {hasSel && current.sel.confidence ? current.sel.confidence : '—'}
+                        {current.cand?.reasons.length > 0 && <span className="sub">{current.cand.reasons.join(' · ')}</span>}
+                        {isClose(row) && <span className="sub">{terms.rank_mismatch.label}{row.id === firstClose && <Info term="rank_mismatch" />}</span>}
                       </td>
-                      <td className="nowrap">{conversionLabel(row)}</td>
+                      <td className="nowrap">{conversionLabel(row)}{conversionHint(row) && <Info>{conversionHint(row)}</Info>}</td>
                       <td className="nowrap"><span className={`st ${tone}`}>● {label}</span></td>
                       <td className="nowrap">
-                        <Link className="text-btn" data-open={row.id} to={`/results/${sessionId}/rows/${row.id}${search}`}>비교·검토</Link>
+                        <Link className={status === 'approved' ? 'text-btn' : 'btn sm'} data-open={row.id} to={`/results/${sessionId}/rows/${row.id}${search}`}>
+                          {status === 'approved' ? '보기' : '후보 확인'}
+                        </Link>
                       </td>
                     </tr>
                   )
@@ -268,8 +295,7 @@ const ResultsPage = () => {
 
       {data && <Outlet context={{ sessionId, rows, visibleIds, update, explain, search }} />}
 
-      <details className="devinfo">
-        <summary>개발 정보</summary>
+      <DevInfo>
         <p className="note">S2 · S3 · FR-801</p>
         <table className="api">
           <tbody>
@@ -280,7 +306,7 @@ const ResultsPage = () => {
             <tr><td className="i">A07</td><td className="m">GET</td><td>{'/api/sessions/{id}/export?format=xlsx'}</td></tr>
           </tbody>
         </table>
-      </details>
+      </DevInfo>
     </>
   )
 }

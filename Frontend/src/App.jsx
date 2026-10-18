@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router'
 import Layout from '@/components/Layout'
+import IntroPage from '@pages/IntroPage'
 import UploadPage from '@pages/UploadPage'
 import ResultsPage from '@pages/ResultsPage'
 import CandidateReviewPage from '@pages/CandidateReviewPage'
@@ -13,7 +14,8 @@ import NotFoundPage from '@pages/NotFoundPage'
 
 const App = () => {
   const paths = [
-    { path: '/', element: <UploadPage /> },
+    { path: '/', element: <IntroPage /> },
+    { path: '/upload', element: <UploadPage /> },
     { path: '/datasets', element: <DatasetsPage /> },
     { path: '/ingest', element: <IngestPage /> },
     { path: '/dictionary', element: <DictionaryPage /> },

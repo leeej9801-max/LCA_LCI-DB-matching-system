@@ -1,5 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router'
+import DevInfo from '@/components/DevInfo'
+import Info from '@/components/Info'
+import MockNotice from '@/components/MockNotice'
+import terms from '@/terms'
 import DatasetBrowser from './datasets/DatasetBrowser'
 import DatasetDetail from './datasets/DatasetDetail'
 
@@ -35,23 +39,25 @@ const DatasetsPage = () => {
     <>
       <div className="head">
         <h1>데이터셋 탐색</h1>
-        <p>국가 LCI DB 849건. 이름·분류로 검색.</p>
+        <p>국가 LCI DB의 {terms.lci_dataset.label}<Info term="lci_dataset" />을 이름·분류로 검색합니다.</p>
       </div>
+
+      <MockNotice path="/datasets" />
 
       <DatasetBrowser params={params} setParams={update} selectedId={selectedId} onRowClick={(id) => update({ id })} />
 
       {selectedId && <DatasetDetail id={selectedId} onSelect={(id) => update({ id })} onClose={() => update({ id: '' })} />}
 
-      <details className="devinfo">
-        <summary>개발 정보</summary>
+      <DevInfo>
         <p className="note">S4 · FR-802 · MVP</p>
+        <p className="note">실제 연결됨(A05·A06): <code>npm run dev:real</code> 에서 이 두 API만 백엔드로 보낸다</p>
         <table className="api">
           <tbody>
             <tr><td className="i">A05</td><td className="m">GET</td><td>{'/api/datasets?q=&category=&has_xml=&sort=&limit=&offset='}</td></tr>
             <tr><td className="i">A06<b>+</b></td><td className="m">GET</td><td>{'/api/datasets/{dataset_id}'}</td></tr>
           </tbody>
         </table>
-      </details>
+      </DevInfo>
     </>
   )
 }

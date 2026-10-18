@@ -14,8 +14,9 @@ a{color:var(--navy)}
 .topbar :focus-visible{outline-color:#fff}
 .topbar-in{max-width:1200px;margin:0 auto;padding:0 24px;height:56px;display:flex;align-items:center;gap:24px}
 .logo{font-weight:700;font-size:17px;white-space:nowrap}
+.topbar a.logo{color:#fff;text-decoration:none}
 .topnav{flex:1;display:flex;justify-content:center;gap:28px}
-.topnav a,.topnav span{display:flex;align-items:center;height:56px;padding-top:2px;border-bottom:2px solid transparent;color:rgba(255,255,255,.75);text-decoration:none;white-space:nowrap}
+.topnav a,.topnav span[aria-disabled]{display:flex;align-items:center;height:56px;padding-top:2px;border-bottom:2px solid transparent;color:rgba(255,255,255,.75);text-decoration:none;white-space:nowrap}
 .topnav a:hover{color:#fff}
 .topnav a.active{color:#fff;border-bottom-color:#fff;font-weight:500}
 .topnav span[aria-disabled="true"]{color:rgba(255,255,255,.45);cursor:not-allowed}
@@ -219,6 +220,31 @@ a.btn{text-decoration:none}
 .picker{display:flex;flex-direction:column;gap:12px;padding-top:12px;border-top:2px solid var(--navy)}
 .picker-head{display:flex;justify-content:space-between;align-items:center}
 .picker-head h3{margin:0;font-size:13px;font-weight:700}
+
+/* 소개 화면 (U4) */
+.intro-h{margin:0;font-size:15px;font-weight:700}
+.flow{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px 26px}
+.flow li{position:relative;flex:1 1 150px;min-width:0;padding:10px 12px;border:1px solid var(--ctl);border-radius:6px}
+.flow li:not(:last-child)::after{content:"→";position:absolute;right:-20px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.flow b{display:block}
+
+/* ⓘ 설명·꺼진 이유·예시 데이터 줄 (U3, ux-revision-2 R2~R4). 새 색은 쓰지 않는다 */
+.info{display:inline-block;margin-left:3px;vertical-align:baseline}
+.info-btn{padding:0 2px;background:none;border:0;color:var(--navy);font:inherit;font-size:12px;line-height:1;cursor:help}
+.tip{position:fixed;z-index:1100;display:block;padding:6px 10px;background:#fff;border:1px solid var(--ctl);border-radius:6px;color:var(--ink);font-size:12px;font-weight:400;line-height:1.5;text-align:left;white-space:normal}
+.tip[hidden]{display:none}
+.reason{position:relative;display:inline-flex}
+.reason .tip{position:absolute;top:calc(100% + 4px);left:0;width:max-content;max-width:min(280px,calc(100vw - 32px));display:none}
+.reason:hover .tip,.reason:focus .tip,.reason:focus-within .tip{display:block}
+.topbar .reason{align-items:center}
+.mock-note{margin:0;padding:6px 12px;background:var(--bg2);color:var(--muted);font-size:13px}
+.dot{display:inline-block;width:8px;height:8px;margin-right:4px;border-radius:50%;vertical-align:baseline}
+.upload-steps{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:4px 16px;color:var(--muted)}
+.tpl{border-collapse:collapse;font-size:12px}
+.tpl th,.tpl td{padding:3px 10px;border:1px solid var(--line);text-align:left;white-space:nowrap}
+.tpl th{font-weight:600}
+.tpl th .note{font-weight:400}
+.side-actions .note{margin:-4px 0 4px}
 
 /* 개발 정보 (A번호·FR·화면 ID 는 여기에만). 틀 화면의 aside.api 도 같은 표 모양 */
 .devinfo{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}

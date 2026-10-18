@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getDataset } from '@/api/datasets'
+import terms from '@/terms'
 
 const MAX_ROWS = 10
 
@@ -39,9 +40,9 @@ const ErrorCases = ({ errors }) => {
                 {shown.map((e) => (
                   <tr key={e.id}>
                     <td>{e.query}</td>
-                    <td>{e.gold_ids.length === 0 ? '정답 없음' : e.gold_ids.map(nameOf).join(', ')}</td>
-                    <td>{e.top1 == null ? '후보 없음' : nameOf(e.top1)}</td>
-                    <td>{e.reason ?? '—'}</td>
+                    <td>{e.gold_ids.length === 0 ? terms.no_answer.label : e.gold_ids.map(nameOf).join(', ')}</td>
+                    <td>{e.top1 == null ? `후보 없음: 시스템이 ${terms.no_match.label}으로 처리` : nameOf(e.top1)}</td>
+                    <td>{e.reason ?? '분석 전: 이 사례의 원인은 아직 기록하지 않았습니다'}</td>
                   </tr>
                 ))}
               </tbody>

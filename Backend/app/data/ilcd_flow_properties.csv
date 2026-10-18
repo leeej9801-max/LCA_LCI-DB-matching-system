@@ -1,0 +1,231 @@
+flow_property_uuid,flow_property_name,unit_group_name,reference_unit,source_file
+00c322dd-3c48-4af1-a8c5-cb5f56b8018f,quantity ton kilometer (tkm),,,(LCI-2024-438) 2-하이드록시에틸 메타아크릴산(HEMA).zip
+01846770-4cfe-4a25-8ad9-919d8d378345,Number of items,Units of items,Item(s),LCI-2022-010.zip
+02f11c31-4bb8-41de-81fb-fb479f361eb9,Iodine content,Units of mass,kg,LCI-2022-075.zip
+037f9009-8b06-470d-a190-21448f7921c7,Lead content,Units of mass,kg,LCI-2022-075.zip
+0387d440-ad96-42de-890b-87cf20748a66,Calcium titanate (CaTiO3) (E),Units of mass,kg,LCI-2023-242.zip
+07001e70-0004-4ba5-9f33-2ff83f97ddec,Methanol (E),Units of mass,kg,LCI-2023-242.zip
+0738ea57-3ecc-4bd9-9634-db430a5f112a,Epoxy resin (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+078ecf46-26d6-47e3-8128-fcced884d1cd,Germanium content,Units of mass,kg,LCI-2022-075.zip
+085af809-5dc6-4920-aaa1-4ac493ae4af8,Nitrogen content (mass),Units of mass,kg,LCI-2022-075.zip
+092f53bf-805a-4cb4-bfdc-30f2bd9e8a6c,Length,Unit of length,m,LCI-2024-384_자동차용 케이블(12~60V).zip
+0ab79a5f-7fd7-4d5d-be55-559292c958d3,Copper content,Units of mass,kg,LCI-2022-075.zip
+0ac18236-1ef4-4d67-95c0-4aebfec7f470,Cerium content,Units of mass,kg,LCI-2022-075.zip
+0b12d18f-0c7c-44da-8c52-dc3278f917c7,Ytterbium content,Units of mass,kg,LCI-2022-075.zip
+0bb4f3ac-2944-4263-8587-ea6eac2d24ac,Rhenium content,Units of mass,kg,LCI-2022-075.zip
+0c8ae116-8bde-454a-a42e-d1950fb07c05,Polyurethane (E),Units of mass,kg,LCI-2023-242.zip
+0d8997ab-43ec-4f8d-8e23-513d634344d7,Polybutylene terephthalate (PBT) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+10575d28-f200-4b61-a64a-ec1d3e4efcc5,Platinum in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+118f2a40-50ec-457c-aa60-9bc6b6af9931,kgkm,Unit of kgkm,kgkm,(LCI-2024-438) 2-하이드록시에틸 메타아크릴산(HEMA).zip
+11f31f00-f6fa-4ef0-a9e3-5bd37199dd20,Tin content,Units of mass,kg,LCI-2022-075.zip
+12557e8e-50e3-4937-ad2e-9fb9d3564a4f,Manganese in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+12d2d828-271b-4c40-9336-5af10b00d9da,Zincoxide (E),Units of mass,kg,LCI-2023-242.zip
+13c38086-aaa2-41cc-81d5-c7ea26937cb0,Colophony (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+147b8dde-f36e-4694-857f-8bf1ca9b36a6,Polyamide 6 (PA6) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+1525f67c-d938-46fb-a2a1-9d521ac59e94,Bismuth oxide (Bi2O3) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+16e0cc2a-941a-4cb7-9a72-e35257fa6f58,Iron in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+183b81cd-b290-4d48-bc9d-b5ebf85a6aca,Tungsten in alloy (E),Units of mass,kg,LCI-2023-242.zip
+184c9c12-32fb-4252-a484-9952928b8473,Indium content,Units of mass,kg,LCI-2022-075.zip
+18e98da0-6347-4118-a394-c05d874243bd,Polyethylene terephthalate (PET) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+1d85ab50-ed1e-4421-b3b8-c5197d858a0d,Argon content (mass),Units of mass,kg,LCI-2022-075.zip
+1e6e8252-dae9-4b4a-866c-c6c3a5e810a1,Thulium content,Units of mass,kg,LCI-2022-075.zip
+22b82252-87a1-4b4b-b921-9371dc4ebd81,Palladium in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+22eef182-e237-4903-a10e-5c78eb30b286,Beryllium in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+24a07e87-aa12-4f9c-8c40-580e9bf7a2f2,Zirconium content,Units of mass,kg,LCI-2022-075.zip
+25c2946d-2b1f-4245-b2aa-80c037912665,Thorium content,Units of mass,kg,LCI-2022-075.zip
+262ec63e-6196-429f-93b9-c9c0d57f5691,Cobalt in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+2651cd57-1c24-4b8e-856b-ddb63a3b267e,Mercury content,Units of mass,kg,LCI-2022-075.zip
+282882cf-a5e5-4170-82dd-8e84da2724d2,Titanium content,Units of mass,kg,LCI-2022-075.zip
+2832ca6b-3826-49b0-ae17-cfae54772957,Titanium (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+29b03f81-3388-48ac-ad3c-a290bd47c512,Steel and iron materials (unspecified),Units of mass,kg,LCI-2022-048 (1).zip
+2d4a75bc-55c4-4816-b88e-f185b556672b,Silicon (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+2d8d9d5e-1840-44d5-94ec-82ec0fd310bf,Polyphenylene ether (PPE) (E),Units of mass,kg,LCI-2023-242.zip
+2e4695ff-d6a5-42c2-9816-6dbd6c859707,Radium content,Units of mass,kg,LCI-2022-075.zip
+2ea4d465-87e3-4f85-81a0-2bd661639f4e,Yttrium content,Units of mass,kg,LCI-2022-075.zip
+33cf4d9a-bcbf-4fe4-926b-38f2c3e36278,Tantalum content,Units of mass,kg,LCI-2022-075.zip
+341fd786-b2ad-4552-a762-5eafcab45dee,Moles,Units of mole,mol,LCI-2022-075.zip
+34908d80-4674-4bdf-82e0-00ec1e90ee48,Chromium in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+374f4198-1923-46b7-9f12-da1d982ad1ba,ecoinvent quantity energy content  (gross cal. value),Units of energy,MJ,(LCI-2024-350) NCM 복합액.zip
+38222108-8b6f-4549-848b-077ef5b79839,Polyvinyl chloride (PVC) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+3acf9ec7-9b90-4088-8c5c-c5b85e689cd7,Zinc (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+3da87ad0-733e-4ca9-b234-75ef52ca2a2d,Holmium content,Units of mass,kg,LCI-2022-075.zip
+3f2de172-1ab1-42bf-937a-32a6b0d25dfe,Aluminum (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+40fae37e-9128-40d2-b567-023443685701,Barium titanate (BaTiO3) (E),Units of mass,kg,LCI-2023-242.zip
+4287200e-2dc7-4012-8000-21bf7102f9b1,Polypropylene (PP) (E),Units of mass,kg,LCI-2023-242.zip
+435e1d0e-e36e-4d4a-9cd1-7fd2c135da61,Antimony content,Units of mass,kg,LCI-2022-075.zip
+441238a3-ba09-46ec-b35b-c30cfba746d1,Volume*time,Units of volume*time,m3*a,(LCI-2024-350) NCM 복합액.zip
+45fc6d6c-529c-48ca-bc82-cda140e18c94,Zinc in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+476dbccb-c1e5-4cdb-aa14-f4ef627c45ec,Fluorine content (mass),Units of mass,kg,LCI-2022-075.zip
+4b5ef3db-c549-4558-8e90-d6e40e99190d,Unalloyed steel (Fe-C) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+4bb48ce8-b4db-4390-b7e6-2e499e6c10e5,Lead (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+4ff6786e-0215-4b39-9b4d-447a7648546c,Polyimide (E),Units of mass,kg,LCI-2023-242.zip
+521686a6-dd9e-4a9a-bba3-cb5906da72f2,Ferrites (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+52dcf2ff-c0f6-417f-a957-788688d67b86,Recycled content (mass),Units of mass,kg,LCI-2022-075.zip
+5544c145-eb58-4de4-a57c-96834910ce26,Chromium (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+585d3441-af58-49c9-a5c2-1d1e5b63f8d5,Comparative Toxic Unit for ecosystems (CTUe),Units of items,Item(s),LCI-2022-075.zip
+597b5a0c-853e-478d-b458-d99283f8d11d,Ethylene-propylene-diene terpolymer (EPDM) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+5a2556bf-a9ec-4720-9253-d40f1de3c2b8,Manganese content,Units of mass,kg,LCI-2022-075.zip
+5a9e455f-cf66-4a8f-bdf9-5fa713371e4d,Acrylic resin (E),Units of mass,kg,LCI-2023-242.zip
+5c39e9a9-4bb5-42cd-b519-0db3a940a575,Ruthenium content,Units of mass,kg,LCI-2022-075.zip
+5c73001f-9622-4cdb-8980-138a87f0ad14,Calcium carbonate (CaCO3) (E),Units of mass,kg,LCI-2023-242.zip
+5db5be2d-8df6-432b-ab3d-ffde49d3fe7f,Barium content,Units of mass,kg,LCI-2022-075.zip
+607a33e0-28ed-42f8-ac8c-66f0c9700e56,Silicon content,Units of mass,kg,LCI-2022-075.zip
+61ec59a5-3816-4e5a-88c7-acf8a8b33d41,Silver content,Units of mass,kg,LCI-2022-075.zip
+62028e85-6dc0-4940-b0fc-710fc3f47378,Glass fibers (E),Units of mass,kg,LCI-2023-242.zip
+62e503ce-544a-4599-b2ad-bcea15a7bf20,Carbon content (biogenic),Units of mass,kg,LCI-2022-075.zip
+64b8e725-b0ba-4837-abb9-62dc0e7b9f6f,Carbon content (fossil),Units of mass,kg,LCI-2022-075.zip
+64e87947-305c-458b-9a6f-8beb066a0174,Antimony oxide (Diantimony trioxide) (Sb2O3) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+65a514d2-1c99-4227-8553-2d2cefb62a34,Lead in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+67dc1cd1-3ba7-4252-bbf4-60533870d966,Titanium dioxide (TiO2) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+6827435e-8ad9-44c1-b0b4-b26f321957b1,Potassium content,Units of mass,kg,LCI-2022-075.zip
+68a5f6e9-9790-4e20-95f4-778ca67f4d2c,ecoinvent quantity price,ecoinvent unit Euro currency unit at mid-year 2005,EUR2005,(LCI-2024-439) 폴리올(CASE).zip
+697fbcb6-b516-4c2f-a78e-5ec2ffaec4b3,Caesium content,Units of mass,kg,LCI-2022-075.zip
+699b6a73-e8d5-4755-8d1d-b70de4b9efdd,Phosphorus content,Units of mass,kg,LCI-2022-075.zip
+6a51f7de-7492-45f3-96d3-685c154b5b82,Tin (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+6b0f51aa-5dc7-4157-b6c6-94f4dc271ea9,Polyphenylene sulfide (PPS) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+6b2d044b-73e8-49e9-a6b9-3c0e1a950f2f,Other materials and material compounds (unspecified),Units of mass,kg,LCI-2022-048 (1).zip
+6bd42f23-8848-4677-89da-24d126aef82e,Biogenic carbon dioxide correction values extraction,Units of mass,kg,LCI-2022-075.zip
+6c034569-72df-4511-9247-2c0d56606db7,Ethylene Glycol (E),Units of mass,kg,LCI-2023-242.zip
+6d9e1462-80e3-4f10-b3f4-71febd6f1168,ecoinvent quantity water in wet mass,Units of mass,kg,(LCI-2024-418) Flat & Shaped 와이어.zip
+71fc82ec-9eb9-424a-bc45-053a844c8af9,Selenium content,Units of mass,kg,LCI-2022-075.zip
+740418f6-c3b2-4d7e-9a05-5c998f6a5ba5,Antimony in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+74f8559d-44a4-409f-9316-a185882a496c,Radon content,Units of mass,kg,LCI-2022-075.zip
+76422aaf-dd51-4de7-a618-d0b766f50ef3,Areatime,Units of area*time,m2*a,LCI-2022-075.zip
+76d611d0-a0a5-43d5-b391-a4e7ec463052,Calcium content,Units of mass,kg,LCI-2022-075.zip
+77f40806-2c54-4050-97d3-d1b61eb4b0c9,Boron content,Units of mass,kg,LCI-2022-075.zip
+78af50f9-9e71-4439-a72d-2fb14209a874,Phenol-Formaldehyde-Resin (PF) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+78b712c9-7f07-467f-b085-efee6067871b,Osmium content,Units of mass,kg,LCI-2022-075.zip
+79920f3d-77b3-4f12-8a8f-47accf832eca,Exergy,Units of energy,MJ,LCI-2024-351_무수불산.zip
+7c367337-54f2-4fe9-8ee3-3f42681b0792,Zinc content,Units of mass,kg,LCI-2022-075.zip
+7cc6f031-f747-49e0-9600-ce2a2fe5657e,Vanadium content,Units of mass,kg,LCI-2022-075.zip
+7ce4c506-5616-4f9c-8c6a-119665e18317,Glass (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+7e9ee7c7-21fd-47fc-9c4f-aff3c9d4ea35,Hausmannite ((Mn+2)(Mn+3)2O 4) (E),Units of mass,kg,LCI-2023-242.zip
+7eb51190-01f0-40a0-801d-b5c588272314,Krypton content (mass),Units of mass,kg,LCI-2022-075.zip
+7eb6e3cb-0c12-4216-99b5-2032906d42ca,Lanthanum content,Units of mass,kg,LCI-2022-075.zip
+7ec8d70e-4ffc-4024-86b7-6141cc0a2bf5,Water content (mass),Units of mass,kg,LCI-2022-075.zip
+804fc8e0-ec21-42e6-bc86-8c83c911633a,Electrolyte (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+825ef2f3-f706-4c47-8f8d-ee9ddbab3b43,Tungsten content,Units of mass,kg,LCI-2022-075.zip
+827934c0-561e-402c-82f2-f04765d180e5,Bismuth content,Units of mass,kg,LCI-2022-075.zip
+83040211-0076-4862-b172-79ce62b71187,Beryllium content,Units of mass,kg,LCI-2022-075.zip
+83c2eede-677e-43ec-98c8-1d801c7f1774,Xenon content,Units of mass,kg,LCI-2022-075.zip
+850638ac-bee8-476d-923a-ebddd10e76b7,Standard volume,Unit of standard volume,Nm3,LCI-2022-033.zip
+8566dd09-9e1d-4b4b-836d-1f7dee6bb156,Indium (E),Units of mass,kg,LCI-2023-242.zip
+85aa9476-64fb-4c86-bc01-0c656b479cb8,Lithium content,Units of mass,kg,LCI-2022-075.zip
+87d26717-c21d-4bbd-b0f1-a2853d6a2745,Other fuels and auxiliary means (unspecified),Units of mass,kg,LCI-2022-048 (1).zip
+88de7063-fd9e-47d2-b182-1960dbaec530,C_total_wt,Units of mass,kg,(LCI-2024-459) 폴리카보네이트(PC).zip
+89d31860-2d34-4652-8574-fc3d9cf83ebd,Unsaturated polyester (UP) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+8abb8476-a831-4741-b0cc-d9b5c4aa0cc9,Tin in alloy (E),Units of mass,kg,(LCI-2024-350) NCM 복합액.zip
+8b6dcd3b-4f24-4066-b584-f0ffd915488d,Area,Units of area,m2,LCI-2022-075.zip
+8da1214e-a70f-47ba-a02a-e83d4c310fa8,Polyoxymethylene/Polyacetal (POM) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+8e1bac16-275d-4cbc-982d-e107b5cf70dd,Molybdenum (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+914db7c1-a756-415c-91c4-e815ad99beb2,"ecoinvent quantity carbon content, fossil","ecoinvent unit dimensionless (for use with counted items, ratios, boolean expressions, dummy variables)",dimensionless,(LCI-2024-418) Flat & Shaped 와이어.zip
+916b98aa-0eac-48df-899c-8c75da009bb4,Cobalt oxide (Co3O4) (E),Units of mass,kg,LCI-2023-242.zip
+9248c348-cadf-47de-afd0-35161d041cb3,Ecoinvent quantity person kilometer (pkm),Ecoinvent unit person kilometer (pkm),pkm,LCI-2024-398.zip
+92f2d417-544a-4fd1-bde7-25967ef93586,Molybdenum content,Units of mass,kg,LCI-2022-075.zip
+935e0cbe-3369-4537-8019-4157cf929304,Terbium content,Units of mass,kg,LCI-2022-075.zip
+93a60a56-a3c8-11da-a746-0800200b9a66,Mass,Units of mass,kg,(LCI-2024-350) NCM 복합액.zip
+93a60a56-a3c8-11da-a746-0800200c9a66,Net calorific value,Units of energy,MJ,(LCI-2024-350) NCM 복합액.zip
+93a60a56-a3c8-14da-a746-0800200c9a66,Gross calorific value,Units of energy,MJ,LCI-2022-033.zip
+93a60a56-a3c8-17da-a746-0800200c9a66,Radioactivity,Units of radioactivity,kBq,(LCI-2024-350) NCM 복합액.zip
+93a60a56-a3c8-19da-a746-0800200c9a66,Area,Units of area,m2,(LCI-2024-350) NCM 복합액.zip
+93a60a56-a3c8-21da-a746-0800200c9a66,Area*time,Units of area*time,m2*a,(LCI-2024-350) NCM 복합액.zip
+93a60a56-a3c8-22da-a746-0800200c9a66,Volume,Units of volume,m3,(LCI-2024-350) NCM 복합액.zip
+984505b9-8536-4e31-a312-0d1a3788f009,Chlorine content (mass),Units of mass,kg,LCI-2022-075.zip
+98eec5a0-44db-411a-a502-95139090bc61,Iridium content,Units of mass,kg,LCI-2022-075.zip
+9bb58775-7ba8-41a7-8818-f75af4f5fe39,Platinum content,Units of mass,kg,LCI-2022-075.zip
+9cee992b-41eb-472c-b74c-96dc15fc4141,Diisononyl phthalate (DINP) (E),Units of mass,kg,LCI-2023-242.zip
+9d5cfb9b-5bb8-4863-b99a-f7a606795b05,Nickel in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+a0f29f45-108a-4aef-8a66-aef07ed34913,Iron content,Units of mass,kg,LCI-2022-075.zip
+a1d0f976-5add-4eed-b378-fc6cef38b5a8,C_biogen_wt,Units of mass,kg,LCI-2022-075.zip
+a1dd1234-1a4e-414b-a3f2-fa802ff78b3c,Tetrabromobisphenol A (TBBA) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+a2e995c4-68e1-42df-a72c-5244368cca49,Lubricants (unspecified),Units of mass,kg,LCI-2022-048 (1).zip
+a301a838-7975-4d89-9e74-8eb77ad03cd1,ecoinvent quantity carbon content,"ecoinvent unit dimensionless (for use with counted items, ratios, boolean expressions, dummy variables)",dimensionless,(LCI-2024-418) Flat & Shaped 와이어.zip
+a417de7f-4ae1-4820-b159-4570fb0f4364,Gold in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+a5278d68-2936-477b-b9de-7ad2d66422ec,Strontium content,Units of mass,kg,LCI-2022-075.zip
+a5f99414-61f4-4cbb-b886-8dddb158c4d6,How much kg bio carbon is stored in reference product?,Units of mass,kg,LCI-2022-075.zip
+a64733c4-2ec2-4bf0-98ac-404105b64d0b,Neodymium oxide (Nd2O3) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+a6dde6ab-14ce-4d10-9007-d8e1bb0bfdf4,"ecoinvent quantity carbon content, non-fossil","ecoinvent unit dimensionless (for use with counted items, ratios, boolean expressions, dummy variables)",dimensionless,(LCI-2024-418) Flat & Shaped 와이어.zip
+a79bfe56-7f99-4c0e-b24e-524972214195,Barium sulfate (E),Units of mass,kg,LCI-2023-242.zip
+a8a8ed7a-ced8-423b-bcce-b972cb808035,n-Methyl-2-pyrrolidone (E),Units of mass,kg,LCI-2023-242.zip
+a8bd8e0c-f194-4155-953f-5b9b0ea10c30,Silicone rubber (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+a9358458-9724-4f03-b622-106eda248916,ecoinvent quantity water content,"ecoinvent unit dimensionless (for use with counted items, ratios, boolean expressions, dummy variables)",dimensionless,(LCI-2024-418) Flat & Shaped 와이어.zip
+a9a5f3db-e0c6-4d3f-aed0-985e1a6dbabc,Polyethylene (PE) (E),Units of mass,kg,LCI-2023-242.zip
+aaa95528-e05d-4eb4-85ff-a5445b580dcc,Oxygen content (mass),Units of mass,kg,LCI-2022-075.zip
+ab654e01-766b-411b-8902-cd6a9c40e55e,Palladium content,Units of mass,kg,LCI-2022-075.zip
+ac557972-7563-49fb-8461-29a4fe8600b7,Gallium content,Units of mass,kg,LCI-2022-075.zip
+ae230610-2c90-4bee-895c-5502d70f74ca,Silver (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+b04c0757-47f1-43f5-b910-5f475e11bd9b,Ecoinvent quantity ton kilometer (tkm),Ecoinvent unit ton kilometer,tkm,LCI-2022-048 (1).zip
+b1192e5a-4a70-4fd7-89a2-6b798c7ed3a7,Cobalt content,Units of mass,kg,LCI-2022-075.zip
+b1467e01-7f7f-4cc8-936a-b8d1627f7f58,Lead glas (PbO) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+b1dd578a-f16a-4eaa-ae08-442aa2a1a2de,Helium content (mass),Units of mass,kg,LCI-2022-075.zip
+b1e9a5bf-c5c7-4d30-b9c7-807f0e7622f7,ABS-polycarbonate blend (ABS+PC) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+b305017e-da55-4a11-be5c-d235d4baf102,Water_wt,Units of mass,kg,LCI-2022-075.zip
+b3d79592-335e-4099-93a8-f83beed30774,Calcium zinc stearate (Ca/Zn) (E),Units of mass,kg,LCI-2023-242.zip
+b3f0f892-c5a3-4c66-a432-c09e3d1e9bd6,Mass*time,Units of mass*time,kg*a,LCI-2022-075.zip
+b4c8b9c7-c943-4d84-a9a1-6e9a1126e8b9,Silicon in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+b539c404-ce19-43fb-ba14-6a1bdd46d8be,Praseodym content,Units of mass,kg,LCI-2022-075.zip
+b7112f15-53b8-446e-af86-63d2be11ff4d,ecoinvent quantity dry mass,Units of mass,kg,(LCI-2024-418) Flat & Shaped 와이어.zip
+b7be6dba-97f0-42f6-b173-e2c6b042fbe7,Sulfur content,Units of mass,kg,LCI-2022-075.zip
+b836cdbe-a2ea-4193-9d91-68ab4576db47,Lead Titanate (PbTiO3) (E),Units of mass,kg,LCI-2023-242.zip
+b8a29b5f-1e7e-4f15-881f-e802e42551eb,Thallium content,Units of mass,kg,LCI-2022-075.zip
+b8ef5a2b-ed75-4497-a061-1ecbbd79a380,Uranium content,Units of mass,kg,LCI-2022-075.zip
+b9570304-4912-4f03-858c-2d43d66309bf,Inorganic flame retardants (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+bc471439-1dc7-4335-8cbb-ac8cd8d94db8,"Environmental cost of air emissions (UBA, version 3.0, 2019)",Unit of currency,EUR,LCI-2022-075.zip
+bcf81c0a-9fe9-4b88-a25b-99e0dd64ddaa,Price,Unit of currency,EUR,(LCI-2024-459) 폴리카보네이트(PC).zip
+bd9b36ca-8240-464a-bba0-01c5210a5b66,Magnesium content,Units of mass,kg,LCI-2022-075.zip
+bef018d4-21eb-4d8f-a49d-6751351dcda2,Copper (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+c11eb6de-8814-432d-b903-59135c7dce19,Polystyrene (PS) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+c2a5d679-93be-44a1-b82f-da986e622ab9,Europium content,Units of mass,kg,LCI-2022-075.zip
+c3732b71-a585-4e1e-9507-7f68bdcee99c,Polycarbonate (PC) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+c4ee14f2-4c8d-4543-8567-86dfd9b36a3d,Market price US97,Unit of currency,EUR,(LCI-2024-459) 폴리카보네이트(PC).zip
+c64f97ae-0a5d-4a64-905f-71f03d626f51,Tantalum (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+c6e83461-8358-4720-873a-250ceef55633,Aluminum oxide (Al2O3) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+c9b392a2-c340-4aa8-9190-ec14461e24c7,Energy (gross calorific value),Units of energy,MJ,LCI-2022-075.zip
+ca77998e-3312-47ba-8d2f-377e777a3742,Paper (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+cb9c387f-9128-4f9f-a2ba-8142d64f6a6b,Volume,Units of volume,m3,LCI-2024-403.zip
+cd8f60eb-f32b-4619-b719-5a654a65384d,Natural rubber (NR) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+cefa9508-86b9-4fad-824e-bbf9d6fdd6f9,Arsenic content,Units of mass,kg,LCI-2022-075.zip
+d07d61ac-df46-4e74-bd49-3260c7b5fb89,Proactinium content,Units of mass,kg,LCI-2022-075.zip
+d1742b7e-bd27-4a07-abb5-bad3a26c9b63,Gold (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+d2524a86-51d8-43f1-a196-2b38d2a79c7b,Silver in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+d4f76a48-d1c9-4c49-a46e-b61feb974ac4,Bromine content,Units of mass,kg,LCI-2022-075.zip
+d50ae3b7-ed12-45b4-a184-235f11210406,Iron (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+d55035e1-5a9a-44c5-88ce-d20086ab7148,Neodymium content,Units of mass,kg,LCI-2022-075.zip
+d58f03c0-feab-4e47-aef6-4394aecc72dd,Lutetium content,Units of mass,kg,LCI-2022-075.zip
+d6b3326a-bc7d-48a9-8c95-2de3e800ec64,Silicone (Sl) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+d6b6a36c-58b3-48c7-b723-392a6df4754f,Aluminium content,Units of mass,kg,LCI-2022-075.zip
+d703ed04-22ca-4151-85ae-da1fcf54df68,Niobium content,Units of mass,kg,LCI-2022-075.zip
+d7882bb5-cb4e-4ef6-84d8-1e1b75de022c,Neon content (mass),Units of mass,kg,LCI-2022-075.zip
+d8c76afc-e95d-4526-bd1e-404c89e77ebc,Nickel (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+d937c32e-749a-4f63-a277-761ae47745eb,Nickel oxide (E),Units of mass,kg,LCI-2023-242.zip
+dae05d3a-fafc-4be0-b79f-c07dbcac6e63,ecoinvent quantity wet mass,Units of mass,kg,(LCI-2024-418) Flat & Shaped 와이어.zip
+dccec68c-c1c9-42e4-9fa9-42dbb943082d,Cadmium content,Units of mass,kg,LCI-2022-075.zip
+dd77d131-c2ee-4d5a-b5d3-f7aa981ae305,Scandium content,Units of mass,kg,LCI-2022-075.zip
+df386f5d-a83b-46f3-baa5-f39532258680,Dotand (E),Units of mass,kg,LCI-2023-242.zip
+df6cc8b4-3149-4571-877d-53ba67c3c9f4,Styrene-butadiene-rubber (SBR) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+e02ff80b-c3f1-4d9d-b33a-f8c3001c70b8,Rhodium content,Units of mass,kg,LCI-2022-075.zip
+e08bcebd-b02f-49b6-a411-ce3817d975b0,Cost,Unit of currency,EUR,(LCI-2024-350) NCM 복합액.zip
+e0cd344e-c22b-491f-9ab7-9f2c0233bf48,Tricresyl phosphate (TCP) (E),Units of mass,kg,LCI-2023-242.zip
+e1b01126-0456-41b5-a29a-d6bd5095b64b,Sodium content,Units of mass,kg,LCI-2022-075.zip
+e4225227-7855-41ce-ba57-a5314fdcdcf1,Gadolinium content,Units of mass,kg,LCI-2022-075.zip
+e43d0778-5a14-47c1-b838-cafa5c0e26e2,Polytetrafluorethylene (PTFE) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+e4c75fcd-0d8b-4bb3-a766-563daffab9f9,Energy (net calorific value),Units of energy,MJ,LCI-2022-075.zip
+e57088b8-0313-45c4-b791-6fdfbb59a142,Samarium content,Units of mass,kg,LCI-2022-075.zip
+e7131c2a-5ec3-4d09-a7dc-56bca86c638e,Plastic unspecified (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+e8b9419c-c36e-445f-a3a9-ace79156ac30,Erbium content,Units of mass,kg,LCI-2022-075.zip
+ebdb8803-8d08-4907-bd2f-6e96a4ae046e,Carbon black (E),Units of mass,kg,LCI-2023-242.zip
+ee798b28-a9bc-45cd-90bd-f59ef7715f14,Strontium titanate (SrTiO3) (E),Units of mass,kg,LCI-2023-242.zip
+f18a0b1c-59ec-4c76-ae20-bc6c522547b3,Tellurium content,Units of mass,kg,LCI-2022-075.zip
+f1b03d9f-7e58-4b22-8829-1f7fe4562cf4,Methylacrylate (E),Units of mass,kg,LCI-2023-242.zip
+f2149ae0-b105-4299-b1f1-cf1fd1577867,Chromium content,Units of mass,kg,LCI-2022-075.zip
+f2283db2-62e4-467f-b9ac-c4f45be563b4,ecoinvent quantity carbon allocation,Units of mass,kg,(LCI-2024-418) Flat & Shaped 와이어.zip
+f33b22c4-e0e7-4fa6-ae2b-246ecb0a16eb,Nickel content,Units of mass,kg,LCI-2022-075.zip
+f3e1017d-1aa3-4763-b563-9494858e1ec7,Hydrogen content (mass),Units of mass,kg,LCI-2022-075.zip
+f46ab534-5e95-40e2-95ae-7d8cb9dc96fd,Copper in alloy (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+f54d918c-fa18-4bd2-8fc9-90298ea3f720,Nylon 6.6 (PA66) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+f65d356a-d702-4d79-850e-dd68b47bbcd9,Comparative Toxic Unit for human (CTUh),Units of items,Item(s),LCI-2022-075.zip
+f9cf8ca4-ace3-4930-9f49-94ec1c43004e,Silicon dioxide (SiO2) (E),Units of mass,kg,(LCI-2024-441) 시스템 폴리올(경질).zip
+fa48378a-140a-4a0a-bf23-2bd64eac7c7c,Methane content (volume),Units of volume,m3,LCI-2022-075.zip
+fa94ba11-2720-441d-b432-a2774f3ab1ad,Gold content,Units of mass,kg,LCI-2022-075.zip
+fc5e9b2c-230c-4950-a998-dc933dbbc344,Ecoinvent quantity cubic meter years (m3a),Ecoinvent unit cubic meter-years (m3a),m3a,LCI-2022-075.zip
+fec15e58-109a-4775-bc6f-72ca0b9b3cee,Carbon content,Units of mass,kg,LCI-2022-075.zip

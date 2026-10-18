@@ -1,11 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { getJob } from '@/api/jobs'
 import { createSession, getSampleCsv, getTemplate, previewUpload } from '@/api/sessions'
+import DevInfo from '@/components/DevInfo'
+import Info from '@/components/Info'
+import MockNotice from '@/components/MockNotice'
+import Reason from '@/components/Reason'
+import terms from '@/terms'
 
 const MOCK = import.meta.env.VITE_API_MOCK === '1'
 const SAMPLE_NAME = '부품BOM_샘플.csv' // mock은 이 이름이면 미리 계산된 결과로 본다 (spec/08 §7)
 const STAGE_STATE = { queued: '대기', running: '진행 중', succeeded: '완료' }
+// 드롭 영역의 양식 예시 (샘플 BOM 의 행). [품명, 규격, 단위, 수량]
+const TEMPLATE_ROWS = [['SPCC 냉연강판', 't1.2 x 120 x 340', 'kg', '2.4'], ['볼트 M6x20', '', 'EA', '20'], ['알루미늄 판재 A5052', 't2', 'm2', '0.8']]
 
 const saveBlob = (blob, name) => {
   const url = URL.createObjectURL(blob)
@@ -16,6 +23,7 @@ const saveBlob = (blob, name) => {
 // S1 BOM 업로드 (FR-301). 파일 고르기 → 미리보기(컬럼 매핑) → 진행 → 결과(S2)
 const UploadPage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const inputRef = useRef(null)
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null) // A20 응답
@@ -73,6 +81,16 @@ const UploadPage = () => {
     }
   }
 
+  // 소개 화면의 "샘플로 해 보기"가 state 로 넘겨 주면 같은 trySample 로 시작한다(새로고침 때 다시 시작하지 않게 state 를 지운다)
+  const sampleAsked = useRef(false)
+  useEffect(() => {
+    if (!location.state?.sample || sampleAsked.current) return
+    sampleAsked.current = true
+    navigate(location.pathname, { replace: true, state: null })
+    trySample()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 도착했을 때 한 번만
+  }, [])
+
   const download = async (get, name) => {
     setError(null)
     try {
@@ -126,7 +144,10 @@ const UploadPage = () => {
     <>
       <div className="head">
         <h1>BOM 업로드</h1>
-        <p>자동차 부품 BOM을 올리면 국가 LCI DB 데이터셋 후보를 찾아 줍니다.</p>
+        <p>자동차 부품 BOM을 올리면 국가 LCI DB의 {terms.lci_dataset.label}<Info term="lci_dataset" /> 후보를 찾아 줍니다.</p>
+        <ol className="upload-steps" aria-label="사용 순서">
+          <li>① BOM 올리기</li><li>② 후보 확인·승인</li><li>③ 승인한 행 내보내기</li>
+        </ol>
       </div>
 
       <div className="upload">
@@ -146,17 +167,27 @@ const UploadPage = () => {
             ref={inputRef} type="file" className="visually-hidden" accept=".csv,.xlsx" aria-label="BOM 파일" tabIndex={-1}
             onChange={(e) => { if (e.target.files[0]) pick(e.target.files[0]); e.target.value = '' }}
           />
-          <p className="note">CSV·XLSX, 5MB · 2,000행까지</p>
+          <p className="note">CSV·XLSX, 5MB · 2,000행까지 · 첫 행은 열 이름. 아래처럼 4열이면 됩니다</p>
+          <table className="tpl" aria-label="양식 예시">
+            <thead>
+              <tr>
+                <th>품명 <span className="note">필수</span></th><th>규격 <span className="note">선택</span></th>
+                <th>단위 <span className="note">필수</span></th><th>수량 <span className="note">필수</span></th>
+              </tr>
+            </thead>
+            <tbody>{TEMPLATE_ROWS.map((r) => <tr key={r[0]}>{r.map((v, i) => <td key={i}>{v}</td>)}</tr>)}</tbody>
+          </table>
           {file && <p className="note">선택한 파일: {file.name}</p>}
         </div>
         <div className="side-actions">
           <button type="button" className="btn" disabled={working} onClick={trySample}>샘플로 해 보기</button>
-          <button type="button" className="text-btn" disabled={working} onClick={() => download(getSampleCsv, SAMPLE_NAME)}>샘플 BOM 내려받기</button>
-          <button
-            type="button" className="text-btn" disabled={MOCK || working}
-            title={MOCK ? '양식 파일은 서버 연결 후 내려받을 수 있습니다' : undefined}
-            onClick={() => download(getTemplate, 'BOM_양식.xlsx')}
-          >양식 내려받기</button>
+          <p className="note">샘플 BOM으로 바로 매칭해 결과 화면을 엽니다</p>
+          <button type="button" className="text-btn" disabled={working} onClick={() => download(getSampleCsv, SAMPLE_NAME)}>예시 파일 내려받기</button>
+          <p className="note">값이 채워진 샘플 BOM(CSV)을 받아 열어 봅니다</p>
+          <Reason when={MOCK} text="곧 제공됩니다">
+            <button type="button" className="text-btn" disabled={MOCK || working} onClick={() => download(getTemplate, 'BOM_양식.xlsx')}>빈 양식 내려받기</button>
+          </Reason>
+          <p className="note">열 이름만 있는 엑셀 양식에 내 BOM을 채웁니다</p>
         </div>
       </div>
 
@@ -169,6 +200,7 @@ const UploadPage = () => {
 
       {preview && !run && (
         <section className="sec" aria-label="컬럼 대응">
+          <MockNotice path="/sessions" />
           <p className="summary-line">
             <b>
               {mapped.length}개 컬럼 인식
@@ -176,7 +208,7 @@ const UploadPage = () => {
                 ? ` · ${missingRequired.map((m) => m.field).join('·')} 컬럼을 찾지 못했습니다`
                 : missingOptional.length > 0 && ` · ${missingOptional.length}개 확인 필요`}
             </b>
-            <button type="button" className="hint" title="회사마다 BOM 열 이름이 달라서, 어느 열이 품명·규격·단위·수량인지 맞춰 둡니다." aria-label="컬럼 대응이란: 회사마다 BOM 열 이름이 달라서, 어느 열이 품명·규격·단위·수량인지 맞춰 둡니다.">?</button>
+            <Info>회사마다 BOM 열 이름이 달라서, 어느 열이 품명·규격·단위·수량인지 맞춰 둡니다.</Info>
             <span className="note">{preview.rows_total}행 · 앞 5행 미리보기</span>
           </p>
 
@@ -215,13 +247,16 @@ const UploadPage = () => {
           </div>
 
           <div>
-            <button type="button" className="btn pri lg" disabled={working || missingRequired.length > 0} onClick={() => start(file, picksToMapping())}>매칭 실행</button>
+            <Reason when={missingRequired.length > 0} text={`${missingRequired.map((m) => m.field).join('·')} 컬럼을 위에서 골라야 실행할 수 있습니다`}>
+              <button type="button" className="btn pri lg" disabled={working || missingRequired.length > 0} onClick={() => start(file, picksToMapping())}>매칭 실행</button>
+            </Reason>
           </div>
         </section>
       )}
 
       {run && (
         <section className="sec" aria-label="매칭 진행" aria-live="polite">
+          <MockNotice path="/jobs" />
           <p className="summary-line"><b>{run.job?.state === 'queued' ? '대기 중' : '매칭 중'}</b></p>
           <ul className="stages">
             {(run.job?.stages ?? []).map((s) => (
@@ -231,8 +266,7 @@ const UploadPage = () => {
         </section>
       )}
 
-      <details className="devinfo">
-        <summary>개발 정보</summary>
+      <DevInfo>
         <p className="note">S1 · FR-301</p>
         {MOCK && <p className="note">mock: 예시 결과로 이동합니다 · <Link to="/results/7f3a9c21d0b4">예시 세션 열기</Link></p>}
         <table className="api">
@@ -244,7 +278,7 @@ const UploadPage = () => {
             <tr><td className="i">A08b<b>+</b></td><td className="m">GET</td><td>{'/api/template.xlsx'}</td></tr>
           </tbody>
         </table>
-      </details>
+      </DevInfo>
     </>
   )
 }

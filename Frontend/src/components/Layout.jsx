@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useMatch } from 'react-router'
+import Reason from '@/components/Reason'
 
 const ADMIN = [
   ['/ingest', '적재 리포트'],
   ['/dictionary', '사전·규칙'],
-  ['/evaluation', '평가'],
   ['/history', '이력'],
   ['/validation', '검증·계산'],
 ]
@@ -39,13 +39,15 @@ const Layout = () => {
     <div className="app">
       <header className="topbar">
         <div className="topbar-in">
-          <span className="logo">LCI-Match</span>
+          <NavLink to="/" className="logo">LCI-Match</NavLink>
           <nav className="topnav" aria-label="작업 흐름">
-            <NavLink to="/" end>업로드</NavLink>
+            <NavLink to="/" end>소개</NavLink>
+            <NavLink to="/upload">업로드</NavLink>
             {sessionId
               ? <NavLink to={`/results/${sessionId}`}>결과</NavLink>
-              : <span aria-disabled="true" title="업로드로 세션을 먼저 만드세요">결과</span>}
+              : <Reason text="먼저 BOM을 업로드하세요"><span aria-disabled="true">결과</span></Reason>}
             <NavLink to="/datasets">데이터셋</NavLink>
+            <NavLink to="/evaluation">평가</NavLink>
           </nav>
           <div className="admin" ref={menuRef}>
             <button

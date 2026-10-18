@@ -13,11 +13,15 @@ class Model(BaseModel):
 
 # --- 컬럼 매핑 (A01·A20) ---
 class ColumnMapping(Model):
-    field: Literal["품명", "규격", "단위", "수량"]
+    field: Literal["품명", "규격", "단위", "수량", "구분", "부품번호"]
     required: bool
     source: str | None
     method: Literal["auto", "manual", "missing"]
     sample: str | None
+
+
+# 데이터셋 역할 표시값(app/roles.py LABEL)
+Role = Literal["소재", "공정", "합본", "수송", "폐기·재활용", "에너지·유틸리티"]
 
 
 # --- 후보 ---
@@ -39,10 +43,11 @@ class Candidate(Model):
     org: str
     year: int
     version: str | None
-    reference_unit: str
+    reference_unit: str | None
     score: float = Field(ge=0, le=1)
     confidence: Literal["높음", "보통", "낮음"]
     reasons: list[str]
+    role: Role | None
     veto: Veto | None
     duplicate_group: DuplicateGroup | None
     has_xml: bool
@@ -57,16 +62,17 @@ class SelectedDataset(Model):
     dataset_id: str
     name: str
     category: str
-    reference_unit: str
-    score: float = Field(ge=0, le=1)
-    confidence: Literal["높음", "보통", "낮음"]
+    reference_unit: str | None
+    score: float | None = Field(ge=0, le=1)  # 직접 선택(후보 밖)에는 점수·신뢰도가 없다(null)
+    confidence: Literal["높음", "보통", "낮음"] | None
     manual: bool
+    role: Role | None
 
 
 class Conversion(Model):
     status: Literal["ok", "converted", "needs_info", "incompatible", "invalid"]
     value: float | None
-    unit: str
+    unit: str | None
     message: str
     missing: list[str]
     method: str | None
@@ -139,6 +145,8 @@ class Review(Model):
 class Row(Model):
     id: int
     source_row: int
+    input_role: Literal["소재", "공정"] | None  # BOM 의 구분 열(없거나 알 수 없으면 null)
+    part_no: str | None
     raw: RawFields
     clean: CleanFields
     normalized_name: str
@@ -178,7 +186,7 @@ class Dataset(Model):
     version: str | None
     has_xml: bool
     list_row: int
-    reference_unit: str
+    reference_unit: str | None
     duplicate_count: int
 
 
@@ -190,7 +198,7 @@ class DatasetDuplicate(Model):
 
 
 class DatasetDetail(Dataset):
-    data_type: str
+    data_type: str | None
     allocation: str | None
     cutoff: str | None
     geography: str | None
