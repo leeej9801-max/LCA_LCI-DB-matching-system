@@ -1,84 +1,110 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { getEvalRun, listEvalRuns } from '@/api/eval'
 import { isMock } from '@/api/client'
 import DevInfo from '@/components/DevInfo'
-import MockNotice from '@/components/MockNotice'
-import Reason from '@/components/Reason'
-import RunResult from './evaluation/RunResult'
+import terms from '@/terms'
+import '@styles/eval.css'
+import EvalAside from './evaluation/EvalAside'
+import EvalDashboard from './evaluation/EvalDashboard'
+import MyBomTab from './evaluation/MyBomTab'
+import { BULK_NOTE, EVAL_HEAD_SUB, MINE_HEAD_SUB, SPEC_NOTE, TOTAL_DATASETS } from './evaluation/evalText'
+import { compareGoldId, pick } from './evaluation/pick'
 
-const MOCK = import.meta.env.VITE_API_MOCK === '1'
+const dateOf = (iso) => iso.slice(0, 10).replaceAll('-', '.')
 
-const dateOf = (iso) => iso.slice(0, 10)
-
-// S7 평가 (FR-901~903). 측정 기록 목록(A19) → 한 건의 결과(A14). 평가 실행(A13)은 서버 연결 뒤
+// S7 성능 확인 (FR-901~903). 탭 1 = 내가 올린 BOM(A02), 탭 2·3 = 정답을 아는 시험 결과(A19 목록과 A14 기록).
+// 평가 기록은 한 번에 불러오되, 실패해도 탭 1은 그대로 쓴다. 평가 실행(A13)은 서버 연결 뒤
 const EvaluationPage = () => {
-  const [runs, setRuns] = useState(null) // A19 items
-  const [runId, setRunId] = useState('')
-  const [run, setRun] = useState(null) // { id, data } A14. 고른 기록과 id가 다르면 아직 불러오는 중
-  const [error, setError] = useState(null)
+  const [tab, setTab] = useState(terms.eval_tabs[0].key)
+  const [state, setState] = useState({ status: 'loading' }) // loading | error | done
+  const [attempt, setAttempt] = useState(0)
 
-  useEffect(() => {
+  const load = useCallback(() => {
     let ignore = false
     listEvalRuns()
-      .then(({ items }) => {
-        if (ignore) return
-        setRuns(items)
-        setRunId((items.find((r) => r.status === 'done') ?? items[0])?.run_id ?? '')
+      .then(async ({ items }) => {
+        const picks = Object.fromEntries(await Promise.all(items.map((i) => getEvalRun(i.run_id).then((r) => [i.run_id, pick(r)]))))
+        if (!ignore) setState({ status: 'done', items, picks })
       })
-      .catch((e) => !ignore && setError(e.detail))
+      .catch((e) => !ignore && setState({ status: 'error', detail: e.detail ?? e.message }))
     return () => { ignore = true }
   }, [])
 
-  const current = runs?.find((r) => r.run_id === runId)
-  const done = current?.status === 'done'
+  useEffect(() => load(), [load, attempt])
 
-  useEffect(() => {
-    if (!runId || !done) return
-    let ignore = false
-    getEvalRun(runId)
-      .then((data) => !ignore && setRun({ id: runId, data }))
-      .catch((e) => !ignore && setError(e.detail))
-    return () => { ignore = true }
-  }, [runId, done])
+  const { items, picks } = state
+  const itemOf = (goldId) => items?.find((i) => picks[i.run_id].goldId === goldId)
+  const current = terms.eval_tabs.find((t) => t.key === tab)
+  const sel = current.goldId && itemOf(current.goldId)
+  const cmpItem = sel && itemOf(compareGoldId(current.goldId))
+  const p1Item = itemOf('gold-p1-v1')
+  const onMine = tab === 'mine'
 
   return (
-    <>
-      <div className="head">
-        <h1>평가</h1>
-        <p>정답셋으로 매칭 성능을 재고, 단계를 하나씩 더해 가며 개선폭을 확인합니다.</p>
-      </div>
+    <div className="pf">
+      <div className="pf-body">
+        <div className="pf-main">
+          <div className="pf-head">
+            <div>
+              <h1>성능 확인</h1>
+              <p>{onMine ? MINE_HEAD_SUB : EVAL_HEAD_SUB}</p>
+            </div>
+            {sel && <p className="pf-date">{dateOf(sel.created_at)} 측정 · 국가 LCI DB {TOTAL_DATASETS}건</p>}
+          </div>
 
-      <MockNotice path="/eval">예시 데이터입니다. 실제 측정 결과가 아닙니다.</MockNotice>
+          <div className="pf-tabs" role="group" aria-label="데이터 고르기">
+            {terms.eval_tabs.map((t) => {
+              const item = t.goldId && itemOf(t.goldId)
+              return (
+                <button key={t.key} type="button" aria-pressed={t.key === tab} onClick={() => setTab(t.key)}>
+                  {t.label}{item && <span>{item.rows}개</span>}
+                </button>
+              )
+            })}
+          </div>
 
-      {runs?.length === 0 && <p className="note">아직 측정한 기록이 없습니다. 정답셋으로 평가를 실행하면 여기에 결과가 쌓입니다.</p>}
+          {onMine && <MyBomTab />}
 
-      {runs?.length > 0 && (
-        <div className="ev-pick">
-          <select className="inp" aria-label="측정 기록" value={runId} onChange={(e) => { setRunId(e.target.value); setError(null) }}>
-            {runs.map((r) => <option key={r.run_id} value={r.run_id}>{r.config_label} · {dateOf(r.created_at)}</option>)}
-          </select>
-          <Reason text="정답셋을 올려 측정하는 기능은 준비 중">
-            <button type="button" className="btn" disabled>새로 측정</button>
-          </Reason>
+          {!onMine && state.status === 'loading' && <p role="status">시험 결과를 불러오는 중입니다…</p>}
+          {!onMine && state.status === 'error' && (
+            <p className="err" role="alert">
+              시험 결과를 불러오지 못했습니다. 서버가 켜져 있는지 확인한 뒤 다시 시도해 주세요. ({state.detail}){' '}
+              <button type="button" className="text-btn" onClick={() => { setState({ status: 'loading' }); setAttempt((n) => n + 1) }}>다시 시도</button>
+            </p>
+          )}
+          {!onMine && state.status === 'done' && !sel && <p className="pf-empty">아직 측정 전입니다(최종 평가를 돌리면 여기에 나타납니다).</p>}
+
+          {sel && p1Item && (
+            <>
+              <EvalDashboard
+                key={sel.run_id} sel={picks[sel.run_id]} cmp={cmpItem && picks[cmpItem.run_id]} selName={current.label}
+                cmpName={cmpItem && terms.eval_tabs.find((t) => t.goldId === picks[cmpItem.run_id].goldId).label} p1={picks[p1Item.run_id]} kind={current.key}
+              />
+              <p className="pf-source">
+                수치: {dateOf(sel.created_at).replace('.', '년 ').replace('.', '월 ')}일 측정 · 규칙은 측정 전에 고정 · 데이터마다 한 번씩만 실행
+                {current.key === 'bulk' && <><br />{BULK_NOTE}</>}
+                <br />{SPEC_NOTE}
+              </p>
+            </>
+          )}
+
+          <DevInfo>
+            <p className="note">S7 · FR-901~903 · {isMock('/eval') ? 'mock: 최종 평가 리포트 사본' : '실제 서버'}</p>
+            {sel && <p className="note">기록 {sel.run_id} · 조합 {sel.config_label}</p>}
+            <table className="api">
+              <tbody>
+                <tr><td className="i">A02</td><td className="m">GET</td><td>{'/api/sessions/{id}'} · 탭 1</td></tr>
+                <tr><td className="i">A19<b>+</b></td><td className="m">GET</td><td>{'/api/eval/runs'}</td></tr>
+                <tr><td className="i">A14</td><td className="m">GET</td><td>{'/api/eval/runs/{id}'}</td></tr>
+                <tr><td className="i">A13</td><td className="m">POST</td><td>{'/api/eval/runs'} · 화면 미연결</td></tr>
+              </tbody>
+            </table>
+          </DevInfo>
         </div>
-      )}
 
-      {error && <p className="err" role="alert">{error}</p>}
-      {current && !done && <p>{current.status === 'failed' ? '측정에 실패했습니다' : '측정 중입니다'}</p>}
-      {done && run?.id === runId && <RunResult run={run.data} example={isMock('/eval')} />}
-
-      <DevInfo>
-        <p className="note">S7 · FR-901~903 · MVP(표만)</p>
-        {MOCK && <p className="note">mock: 예시 데이터입니다</p>}
-        <table className="api">
-          <tbody>
-            <tr><td className="i">A19<b>+</b></td><td className="m">GET</td><td>{'/api/eval/runs'}</td></tr>
-            <tr><td className="i">A14</td><td className="m">GET</td><td>{'/api/eval/runs/{id}'}</td></tr>
-            <tr><td className="i">A13</td><td className="m">POST</td><td>{'/api/eval/runs'} · 화면 미연결</td></tr>
-          </tbody>
-        </table>
-      </DevInfo>
-    </>
+        <EvalAside tab={tab} />
+      </div>
+    </div>
   )
 }
 

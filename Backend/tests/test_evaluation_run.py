@@ -26,26 +26,43 @@ def gold(evaldb, tmp_path):  # noqa: F811
 
 @needs_db
 def test_run_writes_db_and_report(gold, tmp_path):
-    report, out = run_eval(gold, FakeEmbedder(), "t", ["C0", "C1", "C2", "C3"], out=tmp_path / "out", digest=DIGEST)
-    assert {p.name for p in out.iterdir()} == {"report.json", "report.md", "errors.csv"}
+    report, out = run_eval(gold, FakeEmbedder(), "t", ["C0", "C1", "C2", "C3", "C5"], out=tmp_path / "out", digest=DIGEST)
+    assert {p.name for p in out.iterdir()} == {"report.json", "report.md", "errors.csv", "rows.csv", "confidence_rules.csv"}
+    # E1: errors.csv 는 기존 열 순서 뒤에 행별 열, rows.csv 는 측정한 케이스의 모든 행
+    with open(out / "errors.csv", encoding="utf-8-sig", newline="") as f:
+        err_rows = list(csv.DictReader(f))
+    assert list(err_rows[0])[:7] == ["case", "id", "query", "gold_ids", "top1", "top1_name", "reason"]
+    assert list(err_rows[0])[7:] == ["confidence", "rank_tfidf", "rank_dense", "score_dense", "gold_rank"]
+    with open(out / "rows.csv", encoding="utf-8-sig", newline="") as f:
+        all_rows = list(csv.DictReader(f))
+    assert len(all_rows) == 4 * 7
+    assert list(all_rows[0])[12:] == ["top1_ok_A", "top1_ok_strict", "label_type", "input_style", "expected_role",
+                                      "gap_dense", "query_expanded", "lexicon_hits", "inferred_role", "veto_changed", "decision", "no_answer"]
+    c3 = [r for r in all_rows if r["case"] == "C3"]
+    assert all(r["query_expanded"] for r in c3) and all(r["veto_changed"] == "" for r in c3)  # C3 = C2+D: 사전 기록, Veto 없음
+    assert {r["confidence"] for r in all_rows if r["case"] == "C2"} <= {"높음", "보통", "낮음"}
+    assert sum(r["top1_ok_strict"] == "0" for r in all_rows) == len(err_rows)
     # A14 필수 키가 eval.mock.json 의 runs 항목 키를 모두 포함
     a14 = set(next(iter(json.loads(EVAL_MOCK.read_text(encoding="utf-8"))["runs"].values())))
     assert a14 <= set(report) and {"cases", "slices", "coverage_accuracy", "ci"} <= set(report)
     assert set(report["meta"]) == {"model", "index_hash", "dict_version", "rules_version", "seed", "elapsed_s"}
-    assert report["gold_stats"] == {"total": 7, "answerable": 5, "no_answer": 2, "no_answer_ratio": 2 / 7}  # dev 분할만(시드 42 배정)
-    # C3 는 자리만: pending, 숫자 없음
+    gs = report["gold_stats"]  # dev 분할만(시드 42 배정). F3 가 label_types·decided_by 등 키를 더했으므로 기존 네 키만 비교
+    assert {k: gs[k] for k in ("total", "answerable", "no_answer", "no_answer_ratio")} == {
+        "total": 7, "answerable": 5, "no_answer": 2, "no_answer_ratio": 2 / 7}
+    # E2: C3(= C2+D)는 측정, C5 는 run_id 없이 자리만: pending, 숫자 없음. ablation 은 C0→C1→C2→C3→C5 순서
     states = {a["step"].split()[0]: (a["state"], a["top1"]) for a in report["ablation"]}
-    assert states["C3"] == ("pending", None) and states["C0"][0] == "measured"
-    assert report["cases"]["C3"]["state"] == "pending" and "C3" not in report["slices"]
-    assert report["config"]["head_case"] == "C2" and report["metrics"]["abstain_reject_rate"] == 0.0
-    assert set(report["ci"]["diff"]) == {"C1-C0", "C2-C0", "C2-C1"}
+    assert states["C5"] == ("pending", None) and states["C0"][0] == "measured" and states["C3"][0] == "measured"
+    assert [a["step"].split()[0] for a in report["ablation"]] == ["C0", "C1", "C2", "C3", "C5"]
+    assert report["cases"]["C5"]["state"] == "pending" and "C5" not in report["slices"]
+    assert report["config"]["head_case"] == "C3" and report["metrics"]["abstain_reject_rate"] == 0.0
+    assert set(report["ci"]["diff"]) == {"C1-C0", "C2-C0", "C2-C1", "C3-C0", "C3-C1", "C3-C2"}
     mv = report["model_versions"]
     assert mv["ollama_digest"] == "sha256:fake" and mv["split"] == "dev" and mv["rrf_k"] == 60 and len(mv["index_hash"]) == 64
     assert {"embed_model", "dim", "index_version_id", "tfidf", "seed", "gold_sha256", "git_sha", "python", "scikit-learn"} <= set(mv)
     with psycopg.connect(gold) as conn:
         runs = conn.execute("SELECT eval_id, config->>'case', config->>'test_opened' FROM eval_run ORDER BY 1").fetchall()
-        assert [r[1] for r in runs] == ["C0", "C1", "C2"] and {r[2] for r in runs} == {"false"}  # pending 은 DB 에 쓰지 않는다
-        assert conn.execute("SELECT count(*) FROM eval_result").fetchone()[0] == 3 * 7
+        assert [r[1] for r in runs] == ["C0", "C1", "C2", "C3"] and {r[2] for r in runs} == {"false"}  # pending 은 DB 에 쓰지 않는다
+        assert conn.execute("SELECT count(*) FROM eval_result").fetchone()[0] == 4 * 7
         tops = conn.execute("SELECT max(jsonb_array_length(top_ids)) FROM eval_result").fetchone()[0]  # TF-IDF 는 점수 0 을 빼서 더 짧을 수 있다
         assert tops == 10
     reasons = {e["reason"] for e in report["errors"]}

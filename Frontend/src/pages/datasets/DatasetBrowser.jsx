@@ -1,16 +1,54 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { searchDatasets } from '@/api/datasets'
-import Info from '@/components/Info'
 import terms, { sameName } from '@/terms'
-import { dash, orgYearVersion, serverHint } from './format'
+import { dash, serverHint, shortOrg } from './format'
 
 const PAGE_SIZE = 20
 const SORTS = [['relevance', '관련도'], ['year_desc', '연도 최신순'], ['name', '이름순']]
 const HAS_XML = [['', '전체'], ['true', terms.has_xml.xml], ['false', terms.has_xml.excel]]
 
+// 분류 고르기: 여러 개를 고를 수 있는 작은 메뉴(드롭다운). 바깥을 누르거나 Esc 로 닫는다
+const CategoryMenu = ({ selected, counts, onToggle }) => {
+  const [open, setOpen] = useState(false)
+  const wrap = useRef(null)
+  const btn = useRef(null)
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e) => !wrap.current.contains(e.target) && setOpen(false)
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return
+      setOpen(false)
+      btn.current.focus()
+    }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+  const text = selected.length === 0 ? '전체' : selected.length === 1 ? selected[0] : `${selected[0]} 외 ${selected.length - 1}`
+  return (
+    <span className="dd-wrap" ref={wrap}>
+      <button ref={btn} type="button" className="select-btn" aria-haspopup="true" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        분류: {text} <span aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <fieldset className="dd-menu checks">
+          <legend className="visually-hidden">분류</legend>
+          {Object.entries(counts).map(([c, n]) => (
+            <label key={c}><input type="checkbox" checked={selected.includes(c)} onChange={() => onToggle(c)} /> {c} <span className="num">{n}</span></label>
+          ))}
+        </fieldset>
+      )}
+    </span>
+  )
+}
+
 // S4의 검색·필터·표·페이지 (A05). 검색 조건은 params(문자열 값 객체)로 받고 바꿀 때 setParams(changes, options)를 부른다.
 // S4 화면은 URL 쿼리로, S3 직접 선택 피커는 내부 상태로 조건을 들고 있다.
 // onRowClick(id): 행 선택(S4 상세) · rowAction(dataset): 행 끝 동작 버튼(피커의 "이 행에 지정")
+// 데이터셋 "종류"(소재·공정 …)는 A05 응답에 없어 열과 드롭다운을 두지 않는다(U7 요청서 참고)
 const DatasetBrowser = ({ params, setParams, selectedId, onRowClick, rowAction }) => {
   const [reload, setReload] = useState(0)
   const [result, setResult] = useState({ key: null })
@@ -44,60 +82,45 @@ const DatasetBrowser = ({ params, setParams, selectedId, onRowClick, rowAction }
     if (loading || !data || offset <= lastOffset) return
     setParams({ offset: lastOffset ? String(lastOffset) : '' }, { replace: true })
   }, [loading, data, offset, lastOffset, setParams])
-  const firstDup = data?.items.find((d) => d.duplicate_count > 1)?.dataset_id // ⓘ 는 첫 행에만
   const categoryCounts = { ...Object.fromEntries(categories.map((c) => [c, 0])), ...data?.facets.category }
+  const grouped = params.group_duplicates !== 'false'
 
   return (
-    <>
-      <form
-        className="search"
-        role="search"
-        onSubmit={(e) => {
-          e.preventDefault()
-          setParams({ q: e.currentTarget.elements.q.value.trim() })
-        }}
-      >
-        <div className="search-row">
-          {/* key: 뒤로가기로 q가 바뀌면 입력칸도 맞춘다 */}
-          <input name="q" className="inp lg" aria-label="검색어 (한글·영문·약어)" placeholder="한글·영문·약어" key={q} defaultValue={q} maxLength={100} />
-          <button type="submit" className="btn pri lg">검색</button>
-        </div>
-      </form>
-
-      <div className="filters">
-        <fieldset className="seg">
+    <div className="u7-card ds-card">
+      <div className="ds-controls">
+        <form
+          className="search-box grow"
+          role="search"
+          onSubmit={(e) => {
+            e.preventDefault()
+            setParams({ q: e.currentTarget.elements.q.value.trim() })
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+          {/* key: 뒤로가기로 q가 바뀌면 입력칸도 맞춘다. Enter 로 검색 */}
+          <input name="q" aria-label="검색어 (한글·영문·약어)" placeholder="한글·영문·약어로 검색" key={q} defaultValue={q} maxLength={100} />
+        </form>
+        <fieldset className="seg2">
           <legend className="visually-hidden">보유 형태</legend>
           {HAS_XML.map(([v, label]) => (
             <label key={v || 'all'}>
               <input type="radio" name="has_xml" value={v} checked={hasXml === v} onChange={() => setParams({ has_xml: v })} />
-              <span className="num">{label}{v && data && ` (${data.facets.has_xml[v]})`}</span>
+              <span>{label}</span>
             </label>
           ))}
         </fieldset>
-        <Info term="has_xml" />
-        <div className="toggles" role="group" aria-label="분류">
-          {Object.entries(categoryCounts).map(([c, n]) => (
-            <button key={c} type="button" className="toggle" aria-pressed={categories.includes(c)} onClick={() => toggleCategory(c)}>
-              {c} <span className="num">{n}</span>
-            </button>
-          ))}
-        </div>
-        <select className="sort" aria-label="정렬" value={sort} onChange={(e) => setParams({ sort: e.target.value === 'relevance' ? '' : e.target.value })}>
-          {SORTS.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+        <CategoryMenu selected={categories} counts={categoryCounts} onToggle={toggleCategory} />
+        <select className="select-btn" aria-label="정렬" value={sort} onChange={(e) => setParams({ sort: e.target.value === 'relevance' ? '' : e.target.value })}>
+          {SORTS.map(([v, label]) => <option key={v} value={v}>정렬: {label}</option>)}
         </select>
       </div>
 
-      <div className="summary" aria-live="polite">
-        {loading ? '불러오는 중' : result.error ? '' : (
-          <>
-            <b>{q ? `"${q}" ` : ''}{total}건</b>
-            {params.group_duplicates !== 'false' && <span className="note">같은 이름은 최신 1건만 표시</span>}
-            <label className="note">
-              <input type="checkbox" checked={params.group_duplicates === 'false'} onChange={(e) => setParams({ group_duplicates: e.target.checked ? 'false' : '' })} />
-              {' '}같은 이름 모두 보기
-            </label>
-          </>
-        )}
+      <div className="ds-count" aria-live="polite">
+        <span>{loading ? '불러오는 중' : result.error ? '' : <><b>{q ? `"${q}" ` : ''}{total}건</b>{grouped && ' · 같은 이름은 최신판만 표시'}</>}</span>
+        <label className="switch">
+          <input type="checkbox" role="switch" checked={!grouped} onChange={(e) => setParams({ group_duplicates: e.target.checked ? 'false' : '' })} />
+          <span className="knob" aria-hidden="true" />같은 이름 모두 보기
+        </label>
       </div>
 
       {result.error && !loading ? (
@@ -110,11 +133,11 @@ const DatasetBrowser = ({ params, setParams, selectedId, onRowClick, rowAction }
         <div className="state"><p>일치하는 데이터셋 없음.</p></div>
       ) : data && (
         <>
-          <p className="note">{terms.has_xml.xml}는 투입·산출 상세로 계산할 수 있고, {terms.has_xml.excel}은 목록 정보만 있어 이후 계산에서 빠집니다.</p>
-          <table className="tbl">
+          <div className="tbl-scroll"><table className="u7-tbl ds">
+            <colgroup><col /><col className="w-cat" /><col className="w-org" /><col className="w-year" /><col className="w-ver" /><col className="w-has" />{rowAction && <col className="w-act" />}</colgroup>
             <thead>
               <tr>
-                <th>한글명</th><th>분류</th><th>개발기관 · 연도 · 버전</th><th>보유 형태</th>
+                <th>이름</th><th>분류</th><th>개발기관</th><th>연도</th><th>버전</th><th>보유</th>
                 {rowAction && <th><span className="visually-hidden">선택</span></th>}
               </tr>
             </thead>
@@ -135,31 +158,31 @@ const DatasetBrowser = ({ params, setParams, selectedId, onRowClick, rowAction }
                     },
                   })}
                 >
-                  <td>
-                    <b>{d.name}</b>
-                    {d.duplicate_count > 1 && (
-                      <span className="dup">{sameName(d.duplicate_count)}{d.dataset_id === firstDup && <Info term="duplicate_group" />}</span>
-                    )}
-                    <span className="sub">{dash(d.name_en)}</span>
+                  <td className="c-in">
+                    <span className="ell"><b>{d.name}</b>{d.duplicate_count > 1 && <span className="dup">{sameName(d.duplicate_count)}</span>}</span>
+                    <span className="sub ell">{dash(d.name_en)}</span>
                   </td>
-                  <td className="nowrap">{d.category}</td>
-                  <td>{orgYearVersion(d)}</td>
-                  <td className="nowrap">{d.has_xml ? <span className="fmt xml">● {terms.has_xml.xml}</span> : <span className="fmt xls">○ {terms.has_xml.excel}</span>}</td>
+                  <td>{d.category}</td>
+                  <td><span className="ell">{shortOrg(d.org)}</span></td>
+                  <td className="num">{dash(d.year)}</td>
+                  <td className="num">{d.version == null ? '—' : `v${d.version}`}</td>
+                  <td className={d.has_xml ? undefined : 'dim'}>{d.has_xml ? 'XML' : terms.has_xml.excel}</td>
                   {rowAction && <td className="nowrap">{rowAction(d)}</td>}
                 </tr>
               ))}
             </tbody>
-          </table>
-          <nav className="pager" aria-label="페이지">
-            <button type="button" className="text-btn" disabled={offset === 0} onClick={() => setParams({ offset: offset > PAGE_SIZE ? String(offset - PAGE_SIZE) : '' })}>이전</button>
-            <span aria-hidden="true">·</span>
-            <span className="num">{offset + 1}–{Math.min(offset + PAGE_SIZE, total)} / {total}</span>
-            <span aria-hidden="true">·</span>
-            <button type="button" className="text-btn" disabled={offset + PAGE_SIZE >= total} onClick={() => setParams({ offset: String(offset + PAGE_SIZE) })}>다음</button>
+          </table></div>
+          <nav className="u7-pager" aria-label="페이지">
+            <span className="num">{offset + 1}–{Math.min(offset + PAGE_SIZE, total)} / {total}건</span>
+            <span>
+              <button type="button" className="text-btn" disabled={offset === 0} onClick={() => setParams({ offset: offset > PAGE_SIZE ? String(offset - PAGE_SIZE) : '' })}>‹ 이전</button>
+              <span aria-hidden="true"> · </span>
+              <button type="button" className="text-btn" disabled={offset + PAGE_SIZE >= total} onClick={() => setParams({ offset: String(offset + PAGE_SIZE) })}>다음 ›</button>
+            </span>
           </nav>
         </>
       )}
-    </>
+    </div>
   )
 }
 

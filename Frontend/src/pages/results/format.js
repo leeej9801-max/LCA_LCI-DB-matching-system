@@ -1,22 +1,26 @@
-import terms from '@/terms'
+import terms, { roleLabel } from '@/terms'
+import { shortOrg } from '../datasets/format'
 
-// 상태 키(status.js) → [글자, 색 계열, terms.js 키(ⓘ)]
+export { shortOrg }
+
+// 상태 키(status.js) → [글자, 칩 색 계열]. 상태 4색(승인 대기 노랑 / 승인 초록 / 맞는 후보 없음 회색 / 반려 빨강)은 상태 칩에만 쓴다 (U7 규칙 2).
+// 제외도 회색 계열이다. 차단(vetoed)은 후보가 모두 막힌 것이라 "맞는 후보 없음"으로 묶는다(탭과 같다). 색만으로 구분하지 않도록 글자가 항상 같이 나온다
 export const STATUS = {
-  approved: ['승인됨', 'ok', 'approved'],
-  rejected: [terms.rejected.label, 'none', 'rejected'],
-  excluded: [terms.excluded.label, 'none', 'excluded'],
-  vetoed: [terms.veto.label, 'block', 'veto'],
-  no_answer: [terms.no_match.label, 'none', 'no_match'],
-  review: ['검토 필요', 'warn', null],
+  review: ['승인 대기', 'wait'],
+  approved: ['승인', 'ok'],
+  rejected: [terms.rejected.label, 'bad'],
+  excluded: [terms.excluded.label, 'none'],
+  vetoed: [terms.no_candidate.label, 'none'],
+  no_answer: [terms.no_match.label, 'none'],
 }
 
-// states가 null이면 전체
+// states가 null이면 전체. 첫 탭이 기본(전체). URL 쿼리 tab 값은 key (옛 링크 호환: review·blocked·approved·closed·all)
 export const TABS = [
-  { key: 'review', label: '검토 필요', states: ['review'] },
-  { key: 'blocked', label: `${terms.veto.label}·${terms.no_match.label}`, states: ['vetoed', 'no_answer'] },
+  { key: 'all', label: '전체', states: null },
+  { key: 'review', label: '승인 대기', states: ['review'] },
+  { key: 'blocked', label: terms.no_match.label, states: ['vetoed', 'no_answer'] },
   { key: 'approved', label: '승인됨', states: ['approved'] },
   { key: 'closed', label: `${terms.rejected.label}·${terms.excluded.label}`, states: ['rejected', 'excluded'] },
-  { key: 'all', label: '전체', states: null },
 ]
 
 // 추출 속성 [키, 값] → [이름, 값 글자]. 키 끝 _mm은 단위로 옮긴다
@@ -24,42 +28,32 @@ export const attrParts = ([k, v]) => [
   k.replace(/_mm$/, ''),
   v === true ? '예' : v === false ? '아니오' : k.endsWith('_mm') ? `${v}mm` : String(v),
 ]
-export const attrLine = (attrs) => Object.entries(attrs).map((e) => attrParts(e).join(' ')).join(' · ')
 
-// 환산 표시는 응답값 그대로 글자만 붙인다. 계산은 하지 않는다. 상태 단어는 terms.conversion.states
+// "기관 · 연도 · 종류" 한 줄 (표의 보조 정보). 없는 값은 "—"
+export const orgYearRole = (c) => [shortOrg(c.org), c.year ?? '—', c.role ? roleLabel(c.role) : null].filter((v) => v != null).join(' · ')
+
+// 단위 칸 (U7). 응답값 그대로 글자만 붙이고 계산은 하지 않는다. warn=true 면 amber 경고 문구
 const CONV = terms.conversion.states
-export const conversionLabel = (row) => {
+export const unitCell = (row) => {
   const c = row.conversion
-  if (!c) return '—'
-  if (c.status === 'ok') return `${CONV.ok} (${c.unit})`
-  if (c.status === 'converted') return `${CONV.converted} · ${c.value} ${c.unit}`
-  if (c.status === 'needs_info') return `${c.missing.join('·')} ${CONV.needs}`
-  if (c.status === 'incompatible') return `${CONV.incompatible}(${row.clean.unit_display ?? row.raw.unit})`
-  return c.message
+  if (!c) return { text: '—', warn: false }
+  if (c.status === 'ok') return { text: c.unit, warn: false }
+  if (c.status === 'converted') return { text: `${c.value} ${c.unit}`, warn: false }
+  if (c.status === 'needs_info') return { text: c.missing.includes('단위') ? CONV.needsBadge : `${c.missing.join('·')} 필요`, warn: true }
+  if (c.status === 'incompatible') return { text: `단위 불일치(${row.clean.unit_display ?? row.raw.unit})`, warn: true }
+  return { text: c.message ?? '—', warn: true }
 }
 
-// needs_info 행의 ⓘ: 무엇을 어디에 넣으면 되는지
-const INPUT_HINT = { '개당 중량': '부품 1개의 무게(kg/개)', 두께: '판재 두께(mm)', 밀도: '소재 밀도(kg/m³)' }
-export const conversionHint = (row) => {
-  const c = row.conversion
-  if (c?.status !== 'needs_info') return null
-  const what = c.missing.map((m) => INPUT_HINT[m] ?? m).join(', ')
-  return `"후보 확인"을 눌러 ${what}를 입력하면 데이터셋 기준 단위로 환산합니다.`
-}
-
-// 같은 동명 그룹 안의 1·2위는 점수가 같아도 근소로 보지 않는다 (ambiguous 가 true 여도 화면에서 한 번 더 거른다)
-export const isClose = (row) => {
-  const [first, second] = row.candidates
-  return row.ambiguous && !first?.duplicate_group?.others.includes(second?.dataset_id)
-}
+// 단위 정보가 필요한 행: 환산이 끝나지 않은 것 (conversion 이 null 이면 세지 않는다)
+export const unitOpen = (row) => row.conversion != null && !['ok', 'converted'].includes(row.conversion.status)
 
 // 일괄 승인 대상: 현재 선택(기본 선택은 1순위)의 신뢰도 높음 + 환산 ok/converted. 아니면 이유를 돌려준다
 export const bulkBlock = (row) => {
   const s = row.selected
-  if (!s || s.manual) return '선택된 후보가 없거나 차단·직접 선택입니다'
-  if (s.confidence !== '높음') return '선택한 후보의 신뢰도가 높음이 아닙니다'
-  if (row.conversion?.status === 'needs_info') return `${row.conversion.missing.join('·')} 입력 필요`
-  if (!['ok', 'converted'].includes(row.conversion?.status)) return '환산이 완료되지 않았습니다'
+  if (!s || s.manual) return '선택된 후보가 없거나, 차단된 후보·직접 고른 데이터셋입니다. 하나씩 승인하세요'
+  if (s.confidence !== '높음') return '신뢰도가 높음이 아닙니다. 후보를 비교한 뒤 하나씩 승인하세요'
+  if (row.conversion?.status === 'needs_info') return terms.conversion.input(row.conversion.missing)
+  if (!['ok', 'converted'].includes(row.conversion?.status)) return '단위를 변환할 수 없습니다. 다른 후보를 고르세요'
   return null
 }
 
@@ -84,3 +78,31 @@ export const groupByPart = (visible, all) => {
 }
 
 export const conversionDone = (row) => ['ok', 'converted'].includes(row.conversion?.status)
+
+// 결과 목록 위 요약 4칸 + 검토 진행 (U7 2-2 ①). 숫자는 rows 에서 센다. 정의:
+//  found      후보를 찾은 행   = match_state 가 candidate 인 행 (도구 기준; 차단·맞는 후보 없음은 제외). 분모 total = 전체 행
+//  waiting    승인 대기        = 아직 사람이 처리하지 않았고(승인·반려·제외 아님) 후보가 있는 행 (탭 "승인 대기"와 같다). high/mid/low = 현재 선택의 신뢰도별
+//  none       맞는 후보 없음   = 처리 전이고 match_state 가 vetoed·no_answer 인 행 (탭 "맞는 후보 없음"과 같다)
+//  unit       단위 정보 필요   = 현재 선택 기준으로 환산이 끝나지 않은 행 (승인 상태와 상관없이)
+//  approved / closed(반려·제외) / left(남음) = 검토 진행. done = approved + closed
+export const summarizeRows = (rows, statusOf) => {
+  const status = (r) => statusOf(r)
+  const waiting = rows.filter((r) => status(r) === 'review')
+  const level = (r) => r.selected?.confidence ?? r.candidates[0]?.confidence
+  const approved = rows.filter((r) => status(r) === 'approved').length
+  const closed = rows.filter((r) => ['rejected', 'excluded'].includes(status(r))).length
+  return {
+    total: rows.length,
+    found: rows.filter((r) => r.match_state === 'candidate').length,
+    waiting: waiting.length,
+    high: waiting.filter((r) => level(r) === '높음').length,
+    mid: waiting.filter((r) => level(r) === '보통').length,
+    low: waiting.filter((r) => level(r) === '낮음').length,
+    none: rows.filter((r) => ['vetoed', 'no_answer'].includes(status(r))).length,
+    unit: rows.filter(unitOpen).length,
+    approved,
+    closed,
+    done: approved + closed,
+    left: rows.length - approved - closed,
+  }
+}

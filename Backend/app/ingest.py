@@ -26,14 +26,19 @@ FEATURES = ROOT / "data/raw/link-features.json"
 REPORT = ROOT / "data/raw/ingest-report.md"
 MIGRATION = "0002_dataset_extra.sql"
 ROLE_MIGRATION = "0006_role.sql"
+GWP_MIGRATION = "0009_gwp.sql"
+GWP_SUM_TOLERANCE = Decimal("0.01")  # 합계와 세 항목 합이 1% 넘게 다르면 이슈(값은 그대로)
+GWP_KEYS = {"total": "gwp_total", "fossil": "gwp_fossil", "biogenic": "gwp_biogenic", "luluc": "gwp_luluc"}
 NAME_CHECK_MIN = 0.10  # exact 인데 이름 점검 점수가 이보다 낮으면 name_mismatch(사람이 본다)
 GATE_TO_GATE = re.compile(r"gate[\s-]*to[\s-]*gate", re.I)
 
 COLUMNS = ["dataset_id", "list_sn", "ilcd_uuid", "name_ko", "name_en", "category", "developer", "dev_year", "version", "has_xml",
            "reference_year", "geography", "tech_description", "allocation", "cutoff", "dataset_type", "ref_flow_name",
-           "ref_flow_unit", "ref_flow_amount", "system_boundary", "source_file", "source_hash"]
+           "ref_flow_unit", "ref_flow_amount", "system_boundary", "source_file", "source_hash",
+           "gwp_total", "gwp_fossil", "gwp_biogenic", "gwp_luluc", "gwp_method"]
 FILE_COLUMNS = ["ilcd_uuid", "reference_year", "geography", "tech_description", "allocation", "cutoff", "dataset_type",
-                "ref_flow_name", "ref_flow_unit", "ref_flow_amount", "system_boundary", "source_file", "source_hash"]
+                "ref_flow_name", "ref_flow_unit", "ref_flow_amount", "system_boundary", "source_file", "source_hash",
+                "gwp_total", "gwp_fossil", "gwp_biogenic", "gwp_luluc", "gwp_method"]
 UPSERT = (
     f"INSERT INTO lci_dataset ({', '.join(COLUMNS)}) VALUES ({', '.join(['%s'] * len(COLUMNS))}) "
     f"ON CONFLICT (dataset_id) DO UPDATE SET "
@@ -56,6 +61,32 @@ def amount(raw):
         return Decimal(str(raw).replace(",", "").strip()), False
     except InvalidOperation:
         return None, True
+
+
+def gwp_values(lcia, ref_amount):
+    """(열 값 dict, 이슈 [(code, severity, message, detail)]). lcia: 파일 단서의 기후변화 4개 항목(문자열). 값이 없으면 NULL 그대로 둔다.
+    값은 기준 흐름 양당 결과라 ref_amount 로 나눠 1 기준 단위당으로 바꾼다. 기준 흐름 양이 없거나 숫자가 아니거나 0 이하면 NULL + gwp_no_ref."""
+    empty = {c: None for c in GWP_KEYS.values()} | {"gwp_method": None}
+    if not lcia:
+        return empty, []
+    raw = {k: amount(text(lcia.get(k)))[0] for k in GWP_KEYS}
+    if raw["total"] is None:
+        return empty, []
+    if ref_amount is None or ref_amount <= 0:
+        return empty, [("gwp_no_ref", "warning", "배출계수가 있으나 기준 흐름 양이 없어 1 기준 단위당으로 바꾸지 못했습니다",
+                        {"ref_flow_amount": None if ref_amount is None else str(ref_amount)})]
+    issues = []
+    parts = [raw["fossil"], raw["biogenic"], raw["luluc"]]
+    if None not in parts:
+        total = raw["total"]
+        diff = abs(total - sum(parts))
+        if diff > GWP_SUM_TOLERANCE * abs(total) + Decimal("1e-12"):
+            issues.append(("gwp_sum_mismatch", "info", "기후변화 합계가 세 항목의 합과 1% 넘게 다릅니다(값은 그대로 둠)",
+                           {"total": str(total), "sum_of_parts": str(sum(parts))}))
+    version = text(lcia.get("method_version"))
+    values = {GWP_KEYS[k]: (v / ref_amount if v is not None else None) for k, v in raw.items()}
+    values["gwp_method"] = f"Climate change ({version})" if version else "Climate change"
+    return values, issues
 
 
 def read_inputs(list_path, map_path, features_path):
@@ -142,6 +173,11 @@ def build(rows, mapping, features, seed=None):
             elif value is not None and value != 1:
                 issue(ds, "ref_flow_amount_not_1", "info", "기준흐름 양이 1이 아닙니다",
                       {"amount": str(value), "unit": ds["ref_flow_unit"]})
+        if kind == "xml":
+            values, gwp_issues = gwp_values(feat.get("lcia"), ds["ref_flow_amount"])
+            ds.update(values)
+            for code, severity, message, detail in gwp_issues:
+                issue(ds, code, severity, message, detail)
         if ds["system_boundary"] and GATE_TO_GATE.search(ds["system_boundary"]):
             issue(ds, "gate_to_gate", "info", "gate-to-gate 데이터셋입니다(원료가 빠진 공정 데이터)", {"raw": ds["system_boundary"]})
         elif kind == "xml" and feat.get("boundary_hint"):  # system_boundary 열은 XML 에 대해 NULL 그대로(원문 값만 넣는 열)
@@ -179,6 +215,8 @@ def load(conninfo_, list_path=LIST, map_path=MAP, features_path=FEATURES, report
             raise SystemExit("0002가 적용되지 않았습니다. python -m app.db.migrate 를 먼저 실행하세요")
         if not conn.execute("SELECT 1 FROM schema_migration WHERE filename = %s", (ROLE_MIGRATION,)).fetchone():
             raise SystemExit("0006이 적용되지 않았습니다. python -m app.db.migrate 를 먼저 실행하세요")
+        if not conn.execute("SELECT 1 FROM schema_migration WHERE filename = %s", (GWP_MIGRATION,)).fetchone():
+            raise SystemExit("0009가 적용되지 않았습니다. python -m app.db.migrate 를 먼저 실행하세요")
         with conn.transaction(force_rollback=dry_run):
             # uuid 가 다른 행으로 옮겨 가는 재적재에서 UNIQUE 충돌이 나지 않게 먼저 비운다
             conn.execute("UPDATE lci_dataset SET ilcd_uuid = NULL WHERE dataset_id = ANY(%s)", (ids,))
@@ -201,6 +239,10 @@ def summarize(conn, ids):
     one = conn.execute(
         "SELECT count(*), count(*) FILTER (WHERE has_xml), count(source_file), count(ilcd_uuid), count(ref_flow_unit) "
         "FROM lci_dataset WHERE dataset_id = ANY(%s)", (ids,)).fetchone()
+    gwp = conn.execute(
+        "SELECT count(*) FILTER (WHERE gwp_total IS NOT NULL), count(*) FILTER (WHERE has_xml AND gwp_total IS NULL), "
+        "(SELECT count(*) FROM dataset_issue WHERE code = 'gwp_no_ref' AND dataset_id = ANY(%s)) "
+        "FROM lci_dataset WHERE dataset_id = ANY(%s)", (ids, ids)).fetchone()
     codes = conn.execute("SELECT code, severity, count(*) FROM dataset_issue WHERE dataset_id = ANY(%s) GROUP BY 1, 2 ORDER BY 1",
                          (ids,)).fetchall()
     reasons = conn.execute("SELECT detail->>'reason', count(*) FROM dataset_issue WHERE code = 'file_missing' AND dataset_id = ANY(%s) "
@@ -212,7 +254,7 @@ def summarize(conn, ids):
             "ORDER BY d.list_sn", (code, ids)).fetchall()]
 
     return {"rows": one[0], "has_xml": one[1], "source_file": one[2], "ilcd_uuid": one[3], "ref_flow_unit": one[4],
-            "codes": codes, "reasons": reasons, "duplicate_uuid": sns("duplicate_uuid"), "no_ref_flow": sns("no_ref_flow")}
+            "gwp_with": gwp[0], "gwp_without_xml": gwp[1], "gwp_no_ref": gwp[2], "codes": codes, "reasons": reasons, "duplicate_uuid": sns("duplicate_uuid"), "no_ref_flow": sns("no_ref_flow")}
 
 
 def report(s):
@@ -222,6 +264,8 @@ def report(s):
     lines = [
         "# ingest-report (자동 생성, git 제외)" + (" — dry-run(롤백함)" if s["dry_run"] else ""), "",
         f"- 총 행 {s['rows']}, has_xml {s['has_xml']}, source_file {s['source_file']}, ilcd_uuid {s['ilcd_uuid']}, ref_flow_unit {s['ref_flow_unit']}",
+        f"- 배출계수 있음 {s['gwp_with']} / 없음 {s['gwp_without_xml']}(XML 있음 {s['has_xml']}) — 전체 {s['rows']}건 대비 있음 {s['gwp_with'] / s['rows']:.0%}",
+        f"  - 없음 {s['gwp_without_xml']} 중 기준 흐름이 없어 비운 것(영향평가 결과는 있음, gwp_no_ref) {s['gwp_no_ref']}, 나머지는 XML에 영향평가 결과가 없음",
         "", "## 코드별 이슈", "", "| code | severity | 건수 |", "|---|---|---|",
         *[f"| {c} | {sev} | {n} |" for c, sev, n in s["codes"]],
         "", "## file_missing 이유별", "", *[f"- {r}: {n}" for r, n in s["reasons"]],

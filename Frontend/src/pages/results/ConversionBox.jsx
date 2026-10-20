@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import Info from '@/components/Info'
 import terms from '@/terms'
 import { conversionDone } from './format'
 
@@ -10,18 +9,22 @@ const FIELDS = [
   { missing: '개당 중량', id: 'umass', key: 'unit_mass_kg', label: '개당 중량 (kg/개)', ok: (v) => v > 0 && v <= 1000, hint: '0 초과 1000 이하로 입력해 주세요' },
 ]
 
-// 환산 상태: 응답의 conversion 을 그대로 보여 주고, missing 에 해당하는 입력란을 연다 (A03 overrides 만 전송)
-const ConversionBox = ({ row, busy, error, onCheck, onApprove }) => {
+// 단위 변환 상자 (U7 2-3): 입력 → 기준 단위, 변환 없음/필요 안내. 응답의 conversion 을 그대로 보여 주고, missing 에 해당하는 입력란을 연다 (A03 overrides 만 전송).
+// 승인 버튼은 여기에 두지 않는다(결정은 패널 맨 아래 한 줄)
+const ConversionBox = ({ row, busy, error, onCheck }) => {
   const c = row.conversion
   const [values, setValues] = useState(() => Object.fromEntries(FIELDS.map((f) => [f.key, row.overrides[f.key] ?? ''])))
   const [problem, setProblem] = useState({})
 
   const needed = c?.status === 'needs_info' ? FIELDS.filter((f) => c.missing.includes(f.missing)) : []
-  const approved = row.review.status === 'approved'
   const rangeField = error?.code === 'OUT_OF_RANGE' ? error.meta?.field : null // 400: 해당 입력칸 옆에
-  const incomplete = error?.code === 'CONVERSION_INCOMPLETE' // 409: 승인 버튼 옆에
-  const stateBadge = c?.status === 'needs_info' ? ['warn', terms.conversion.states.needsBadge]
-    : c?.status === 'incompatible' ? ['block', terms.conversion.states.incompatible] : null
+  const input = `${row.clean.quantity ?? row.raw.quantity ?? '—'} ${row.clean.unit_display ?? row.raw.unit}`
+  const ref = row.selected?.reference_unit
+  const state = !c ? null
+    : c.status === 'ok' ? [terms.conversion.states.ok, 'ok']
+      : c.status === 'converted' ? [terms.conversion.states.converted, 'ok']
+        : c.status === 'needs_info' ? [terms.conversion.input(c.missing), 'warn']
+          : [terms.conversion.states.incompatible, 'warn']
 
   const submit = (e) => {
     e.preventDefault()
@@ -32,21 +35,21 @@ const ConversionBox = ({ row, busy, error, onCheck, onApprove }) => {
   }
 
   return (
-    <section className="sec" id="conv">
-      <h3>환산 상태<Info term="conversion" /></h3>
-      {row.selected && (
-        <p className="note">
-          선택: {row.selected.name}{row.selected.manual && ' · 직접 선택'}
-          {row.selected.reference_unit == null && <> · {terms.no_reference_unit.label}<Info term="no_reference_unit" /></>}
-        </p>
-      )}
-      {!c ? (
-        <p className="note">후보를 선택하면 환산 결과가 표시됩니다.</p>
+    <section className="u7-box" id="conv" aria-label={terms.conversion.label}>
+      <div className="box-h">{terms.conversion.label}{state && <span className={`conv-state ${state[1]}`}>{state[0]}</span>}</div>
+      {!row.selected ? (
+        <p className="sub">후보를 고르면 단위 변환 결과가 여기에 나옵니다.</p>
       ) : (
         <>
-          {conversionDone(row) && <p><b>{c.message}</b></p>}
-          {conversionDone(row) && <p>{c.value} {c.unit}{c.method && <span className="note"> · {c.method}</span>}</p>}
-          {c.status === 'incompatible' && <p>이 행은 제외하거나 다른 후보를 고르세요.</p>}
+          <div className="conv-line">
+            <span>{input}</span><span className="arrow" aria-hidden="true">→</span>
+            <span>
+              {conversionDone(row) && c.status === 'converted' ? `${c.value} ${c.unit}`
+                : ref == null ? terms.no_reference_unit.label : `${terms.reference_flow.label} ${ref}`}
+            </span>
+          </div>
+          {c?.message && <p className="sub">{c.message}{conversionDone(row) && c.method && c.method !== 'identity' ? ` · ${terms.conversion.methods[c.method] ?? c.method}` : ''}</p>}
+          {c?.status === 'incompatible' && <p className="sub">이 행은 제외하거나 다른 후보를 고르세요.</p>}
           {needed.length > 0 && (
             <form className="conv-form" onSubmit={submit} noValidate>
               <div className="row-inputs">
@@ -66,26 +69,12 @@ const ConversionBox = ({ row, busy, error, onCheck, onApprove }) => {
                   </div>
                 ))}
               </div>
-              <button type="submit" className="btn sm" disabled={busy}>환산 확인</button>
+              <button type="submit" className="btn sm" disabled={busy}>입력값으로 변환</button>
             </form>
           )}
         </>
       )}
       {error && rangeField && !needed.some((f) => f.key === rangeField) && <p className="err" role="alert">{error.detail}</p>}
-      {row.selected && (
-        <div className="flex-row">
-          <button type="button" className="btn pri sm" disabled={busy || approved || !conversionDone(row)} onClick={onApprove}>
-            {approved ? '승인됨' : '현재 선택 승인'}
-          </button>
-          {stateBadge && <span className={`badge ${stateBadge[0]}`}>{stateBadge[1]}</span>}
-          {!conversionDone(row) && c && !approved && (
-            <span className="note">
-              {c.message}{c.missing.length > 0 && ` (필요: ${c.missing.join(', ')})`}
-            </span>
-          )}
-          {incomplete && <span className="err" role="alert">{error.detail}</span>}
-        </div>
-      )}
     </section>
   )
 }

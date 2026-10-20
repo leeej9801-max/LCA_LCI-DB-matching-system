@@ -6,13 +6,13 @@
         "run_id": "eval-2",
         "status": "done",
         "created_at": "2026-10-17T14:20:00+09:00",
-        "config_label": "TF-IDF + 사전 + 차단 + 동명 묶기"
+        "config_label": "글자 일치 + 사전 + 차단 + 같은 이름 묶기"
       },
       {
         "run_id": "eval-1",
         "status": "done",
         "created_at": "2026-10-17T11:05:00+09:00",
-        "config_label": "TF-IDF 단독"
+        "config_label": "글자 일치 단독"
       }
     ],
     "total": 2
@@ -30,7 +30,7 @@
         "seed": 42
       },
       "meta": {
-        "model": "tfidf (예시)",
+        "model": "글자 일치(예시)",
         "index_hash": "mock",
         "dict_version": "mock",
         "rules_version": "mock",
@@ -51,7 +51,7 @@
       },
       "ablation": [
         {
-          "step": "TF-IDF 단독",
+          "step": "글자 일치 단독",
           "top1": 0.72,
           "top3": null,
           "abstain_reject_rate": null,
@@ -72,14 +72,14 @@
           "state": "pending"
         },
         {
-          "step": "+ 동명 묶기(최신 연도)",
+          "step": "+ 같은 이름 묶기(최신판)",
           "top1": 0.86,
           "top3": null,
           "abstain_reject_rate": null,
           "state": "measured"
         },
         {
-          "step": "+ bge-m3 임베딩 · RRF",
+          "step": "+ 의미 유사 검색(두 방식 합치기)",
           "top1": null,
           "top3": null,
           "abstain_reject_rate": null,
@@ -151,7 +151,7 @@
         "seed": 42
       },
       "meta": {
-        "model": "tfidf (예시)",
+        "model": "글자 일치(예시)",
         "index_hash": "mock",
         "dict_version": "mock",
         "rules_version": "mock",
@@ -172,7 +172,7 @@
       },
       "ablation": [
         {
-          "step": "TF-IDF 단독",
+          "step": "글자 일치 단독",
           "top1": 0.72,
           "top3": null,
           "abstain_reject_rate": null,
@@ -193,14 +193,14 @@
           "state": "pending"
         },
         {
-          "step": "+ 동명 묶기(최신 연도)",
+          "step": "+ 같은 이름 묶기(최신판)",
           "top1": null,
           "top3": null,
           "abstain_reject_rate": null,
           "state": "pending"
         },
         {
-          "step": "+ bge-m3 임베딩 · RRF",
+          "step": "+ 의미 유사 검색(두 방식 합치기)",
           "top1": null,
           "top3": null,
           "abstain_reject_rate": null,

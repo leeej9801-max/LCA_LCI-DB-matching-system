@@ -2,27 +2,50 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { isMock } from '@/api/client'
 import { getJob } from '@/api/jobs'
-import { createSession, getSampleCsv, getTemplate, previewUpload } from '@/api/sessions'
+import { createSession, getBomTemplate, getSampleCsv, previewUpload } from '@/api/sessions'
 import DevInfo from '@/components/DevInfo'
-import Info from '@/components/Info'
 import MockNotice from '@/components/MockNotice'
 import Reason from '@/components/Reason'
 import terms from '@/terms'
 import { retryable, uploadErrorText } from './upload/errorText'
 
 const SESSIONS_MOCK = isMock('/sessions') // mock 모드: 샘플이 미리 계산된 결과로 바로 열린다. 실제 모드: A08 → A01 → A21 폴링
-const TEMPLATE_MOCK = isMock('/template.xlsx')
+const TEMPLATE_MOCK = isMock('/bom/template')
 const OPTIONAL_COLS = ['구분', '부품번호'] // 선택 열(T13): 없어도 "확인 필요"로 세지 않고 접힌 영역에 둔다
 const SAMPLE_NAME = '부품BOM_샘플.csv' // mock은 이 이름이면 미리 계산된 결과로 본다 (spec/08 §7)
-const STAGE_STATE = { queued: '대기', running: '진행 중', succeeded: '완료' }
-// 드롭 영역의 양식 예시 (샘플 BOM 의 행). [품명, 규격, 단위, 수량]
-const TEMPLATE_ROWS = [['SPCC 냉연강판', 't1.2 x 120 x 340', 'kg', '2.4'], ['볼트 M6x20', '', 'EA', '20'], ['알루미늄 판재 A5052', 't2', 'm2', '0.8']]
+// 처리 현황의 단계. "파일 읽기"는 작업(job)이 만들어졌다는 것 자체(A01 이 파일을 먼저 읽고 202 를 준다)라 API 단계에 없다. 나머지는 A21 stages 이름을 화면 말로
+const STAGE_LABEL = { 정규화: '품명 정리' }
+const API_STAGES = ['정규화', '후보 검색', '판정·환산'] // job 응답을 받기 전의 자리표시(이름은 서버 STAGES 와 같다)
+// 읽는 열 (Backend/app/bom/mapping.py FIELDS 와 같다: 품명·단위·수량 필수, 규격·부품번호·구분 선택). 화면 이름은 FTA 양식 표기
+const READ_COLS = [['품명(국문)', true], ['단위', true], ['소요량', true], ['규격', false], ['품번', false], ['구분(소재/공정)', false]]
 
 const saveBlob = (blob, name) => {
   const url = URL.createObjectURL(blob)
   Object.assign(document.createElement('a'), { href: url, download: name }).click()
   URL.revokeObjectURL(url)
 }
+
+// 처리 현황 단계: [{ label, state: 'done'|'now'|'wait', sub }]
+const railSteps = (run, rowsTotal) => {
+  const job = run?.job
+  if (!run) return ['파일 읽기', ...API_STAGES.map((n) => STAGE_LABEL[n] ?? n)].map((label) => ({ label, state: 'wait', sub: '대기' })) // 아직 올린 파일이 없다
+  const stages = job?.stages ?? API_STAGES.map((name) => ({ name, state: 'queued', done: 0, total: 0 }))
+  return [
+    { label: '파일 읽기', state: 'done', sub: rowsTotal != null ? `${rowsTotal}행` : '' },
+    ...stages.map((s) => ({
+      label: STAGE_LABEL[s.name] ?? s.name,
+      state: s.state === 'succeeded' ? 'done' : s.state === 'running' ? 'now' : 'wait',
+      sub: s.state === 'succeeded' ? (s.total > 0 ? `${s.total}행` : '') : s.state === 'running' ? (s.total > 0 ? `${s.done} / ${s.total}` : '진행 중') : '대기',
+    })),
+  ]
+}
+
+const Doc = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>
+)
+const Down = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>
+)
 
 // S1 BOM 업로드 (FR-301). 파일 고르기 → 미리보기(컬럼 매핑) → 진행 → 결과(S2)
 const UploadPage = () => {
@@ -148,54 +171,111 @@ const UploadPage = () => {
   const fieldOf = (col) => mapping.find((m) => sourceOf(m) === col)?.field
   const working = busy || !!run
 
+  const job = run?.job
+  const steps = railSteps(run, preview?.rows_total ?? null)
+  const firstOpen = steps.findIndex((s) => s.state !== 'done')
+  const filled = !run ? 0 : (firstOpen === -1 ? steps.length - 1 : firstOpen) / (steps.length - 1)
+  const running = job?.stages?.find((s) => s.state === 'running')
+  const percent = running?.total ? Math.round((running.done / running.total) * 100) : job?.state === 'succeeded' ? 100 : 0
+  const phase = !run ? null : job?.state === 'queued' ? '대기 중' : running ? `${STAGE_LABEL[running.name] ?? running.name} 중` : job ? '마무리 중' : '시작하는 중'
+
   return (
-    <>
-      <div className="head">
+    <div className="u7">
+      <div className="u7-title">
         <h1>BOM 업로드</h1>
-        <p>자동차 부품 BOM을 올리면 국가 LCI DB의 {terms.lci_dataset.label}<Info term="lci_dataset" /> 후보를 찾아 줍니다.</p>
-        <ol className="upload-steps" aria-label="사용 순서">
-          <li>① BOM 올리기</li><li>② 후보 확인·승인</li><li>③ 승인한 행 내보내기</li>
-        </ol>
+        <p>부품 BOM을 올리면 국가 LCI DB에서 맞는 데이터셋 후보를 찾아 줍니다.</p>
       </div>
 
-      <div className="upload">
-        <div
-          className={over ? 'drop over' : 'drop'}
-          onDragOver={(e) => { e.preventDefault(); setOver(true) }}
-          onDragLeave={() => setOver(false)}
-          onDrop={(e) => {
-            e.preventDefault()
-            setOver(false)
-            if (!working && e.dataTransfer.files[0]) pick(e.dataTransfer.files[0])
-          }}
-        >
-          <p>BOM 파일을 여기에 끌어 놓거나</p>
-          <button type="button" className="btn" disabled={working} onClick={() => inputRef.current.click()}>파일 선택</button>
-          <input
-            ref={inputRef} type="file" className="visually-hidden" accept=".csv,.xlsx" aria-label="BOM 파일" tabIndex={-1}
-            onChange={(e) => { if (e.target.files[0]) pick(e.target.files[0]); e.target.value = '' }}
-          />
-          <p className="note">CSV·XLSX, 5MB · 2,000행까지 · 첫 행은 열 이름. 아래처럼 4열이면 됩니다</p>
-          <table className="tpl" aria-label="양식 예시">
-            <thead>
-              <tr>
-                <th>품명 <span className="note">필수</span></th><th>규격 <span className="note">선택</span></th>
-                <th>단위 <span className="note">필수</span></th><th>수량 <span className="note">필수</span></th>
-              </tr>
-            </thead>
-            <tbody>{TEMPLATE_ROWS.map((r) => <tr key={r[0]}>{r.map((v, i) => <td key={i}>{v}</td>)}</tr>)}</tbody>
-          </table>
-          {file && <p className="note">선택한 파일: {file.name}</p>}
-        </div>
-        <div className="side-actions">
-          <button type="button" className="btn" disabled={working} onClick={trySample}>샘플로 해 보기</button>
-          <p className="note">샘플 BOM으로 바로 매칭해 결과 화면을 엽니다</p>
-          <button type="button" className="text-btn" disabled={working} onClick={() => download(getSampleCsv, SAMPLE_NAME)}>예시 파일 내려받기</button>
-          <p className="note">값이 채워진 샘플 BOM(CSV)을 받아 열어 봅니다</p>
-          <Reason when={TEMPLATE_MOCK} text="곧 제공됩니다">
-            <button type="button" className="text-btn" disabled={TEMPLATE_MOCK || working} onClick={() => download(getTemplate, 'BOM_양식.xlsx')}>빈 양식 내려받기</button>
-          </Reason>
-          <p className="note">열 이름만 있는 엑셀 양식에 내 BOM을 채웁니다</p>
+      <ol className="u7-steps" aria-label="사용 순서">
+        <li className="now" aria-current="step"><span className="n">1</span>파일 올리기</li>
+        <li className="bar" aria-hidden="true" />
+        <li><span className="n">2</span>후보 확인·승인</li>
+        <li className="bar" aria-hidden="true" />
+        <li><span className="n">3</span>내보내기</li>
+      </ol>
+
+      <div className="u7-cols">
+        <section className="u7-card u7-main" aria-label="파일 올리기">
+          <div
+            className={over ? 'u7-drop over' : 'u7-drop'}
+            onDragOver={(e) => { e.preventDefault(); setOver(true) }}
+            onDragLeave={() => setOver(false)}
+            onDrop={(e) => {
+              e.preventDefault()
+              setOver(false)
+              if (!working && e.dataTransfer.files[0]) pick(e.dataTransfer.files[0])
+            }}
+          >
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5" /><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" /></svg>
+            <p className="big">BOM 파일을 여기에 끌어 놓으세요</p>
+            <p className="or">또는 <button type="button" className="btn" disabled={working} onClick={() => inputRef.current.click()}>파일 선택</button></p>
+            <input
+              ref={inputRef} type="file" className="visually-hidden" accept=".csv,.xlsx,.xls" aria-label="BOM 파일" tabIndex={-1}
+              onChange={(e) => { if (e.target.files[0]) pick(e.target.files[0]); e.target.value = '' }}
+            />
+            <p className="limit">xlsx · xls · csv · 최대 5MB · 2,000행</p>
+            {file && <p className="limit">선택한 파일: {file.name}</p>}
+          </div>
+          <h2 className="cols-h">읽는 열</h2>
+          <div className="cols">
+            {READ_COLS.map(([name, required]) => (
+              <span key={name} className="col-chip">{name}<span className={required ? 'req' : 'opt'}>{required ? '필수' : '선택'}</span></span>
+            ))}
+          </div>
+          <p className="hint">FTA 원산지 자재명세서 양식을 그대로 올려도 됩니다. 구분을 비우면 품명으로 공정 여부를 추정합니다.</p>
+        </section>
+
+        <div className="u7-side">
+          <section className="u7-card" aria-label="양식 내려받기">
+            <h2>양식 내려받기</h2>
+            <Reason when={TEMPLATE_MOCK} text="곧 제공됩니다">
+              <button type="button" className="dl-row" disabled={TEMPLATE_MOCK || working} onClick={() => download(() => getBomTemplate('blank'), 'fta-bom-template.xlsx')}>
+                <span className="ico"><Doc /></span>
+                <span className="txt"><b>빈 양식</b><span>FTA 자재명세서 · xlsx</span></span>
+                <span className="dl"><Down /></span>
+              </button>
+            </Reason>
+            <Reason when={TEMPLATE_MOCK} text="곧 제공됩니다">
+              <button type="button" className="dl-row" disabled={TEMPLATE_MOCK || working} onClick={() => download(() => getBomTemplate('sample'), 'fta-bom-sample.xlsx')}>
+                <span className="ico"><Doc /></span>
+                <span className="txt"><b>예시가 채워진 샘플</b><span>19행 · xlsx</span></span>
+                <span className="dl"><Down /></span>
+              </button>
+            </Reason>
+            <div className="try">
+              <span className="txt"><b>바로 해 보기</b><span>샘플 BOM으로 결과 화면을 엽니다</span></span>
+              <button type="button" className="btn" disabled={working} onClick={trySample}>샘플로 시작</button>
+            </div>
+          </section>
+
+          <section className="u7-card" aria-label="처리 현황" aria-live="polite">
+            <div className="prog-h">
+              <h2>처리 현황</h2>
+              {file && <span className="meta ell">{file.name}{preview ? ` · ${preview.rows_total}행` : ''}</span>}
+            </div>
+            {run && <MockNotice path="/jobs" />}
+            <ol className="rail" style={{ '--filled': filled }}>
+              {steps.map((s, i) => (
+                <li key={i} className={s.state}>
+                  <span className="dot" aria-hidden="true">
+                    {s.state === 'done' && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3"><path d="M5 12.5 10 17l9-10" /></svg>}
+                    {s.state === 'now' && <i />}
+                  </span>
+                  <span className="name">{s.label}</span>
+                  <span className="cnt">{s.sub}</span>
+                </li>
+              ))}
+            </ol>
+            {run ? (
+              <>
+                <div className="prog-l"><span>{phase}</span>{running && <span>{percent}%</span>}</div>
+                <div className="prog-t" role="progressbar" aria-label="처리 진행률" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}><span style={{ width: `${percent}%` }} /></div>
+                <p className="hint">끝나면 결과 화면으로 넘어갑니다.</p>
+              </>
+            ) : (
+              <p className="hint">파일을 올리면 여기에 진행 상황이 나옵니다.</p>
+            )}
+          </section>
         </div>
       </div>
 
@@ -207,33 +287,36 @@ const UploadPage = () => {
       )}
 
       {preview && !run && (
-        <section className="sec" aria-label="컬럼 대응">
+        <section className="u7-card u7-map" aria-label="컬럼 대응">
           <MockNotice path="/sessions" />
           <p className="summary-line">
             <b>
               {mapped.length}개 컬럼 인식
               {missingRequired.length > 0
                 ? ` · ${missingRequired.map((m) => m.field).join('·')} 컬럼을 찾지 못했습니다`
-                : missingOptional.length > 0 && ` · ${missingOptional.length}개 확인 필요`}
+                : missingOptional.length > 0 && ` · ${missingOptional.length}개 열을 골라 주세요`}
             </b>
-            <Info>회사마다 BOM 열 이름이 달라서, 어느 열이 품명·규격·단위·수량인지 맞춰 둡니다.</Info>
-            <span className="note">{preview.rows_total}행 · 앞 5행 미리보기</span>
+            <span className="note">{preview.rows_total}행 · 앞 5행 미리보기 · 회사마다 열 이름이 달라 어느 열이 품명·규격·단위·수량인지 맞춰 둡니다</span>
+            {(preview.rows_skipped?.example > 0 || preview.rows_skipped?.empty_name > 0) && (
+              <span className="note">
+                {' · '}양식 예시 {preview.rows_skipped.example}행, 품명이 빈 {preview.rows_skipped.empty_name}행은 제외했습니다
+              </span>
+            )}
           </p>
 
           <div className="optcols">
             <p className="note">
               {optionalFound.length > 0
-                ? <>선택 열 인식: {optionalFound.map((m) => `${m.field}=${sourceOf(m)}`).join(', ')}</>
-                : '선택 열(구분·부품번호)이 없습니다. 없으면 소재·공정을 가리지 않고 찾습니다.'}
-              <Info term="input_role" />
+                ? <>선택 열 인식: {optionalFound.map((m) => `${m.field === '구분' ? terms.input_role.label : m.field}=${sourceOf(m)}`).join(', ')}</>
+                : `선택 열(${terms.input_role.label} "구분"·부품번호)이 없습니다. 없으면 소재·공정을 가리지 않고 찾습니다.`}
             </p>
             {optionalPickable.length > 0 && (
               <details>
-                <summary>선택 열(구분·부품번호) 직접 고르기</summary>
+                <summary>선택 열({terms.input_role.label}·부품번호) 직접 고르기</summary>
                 <div className="row-inputs">
                   {optionalPickable.map((m) => (
                     <div className="field" key={m.field}>
-                      <label className="lb" htmlFor={`map-${m.field}`}>{m.field} (선택)</label>
+                      <label className="lb" htmlFor={`map-${m.field}`}>{m.field === '구분' ? `${terms.input_role.label}(구분)` : m.field} (선택)</label>
                       <select
                         id={`map-${m.field}`} className="inp" value={picks[m.field] ?? ''}
                         onChange={(e) => setPicks({ ...picks, [m.field]: e.target.value })}
@@ -286,21 +369,9 @@ const UploadPage = () => {
 
           <div>
             <Reason when={missingRequired.length > 0} text={`${missingRequired.map((m) => m.field).join('·')} 컬럼을 위에서 골라야 실행할 수 있습니다`}>
-              <button type="button" className="btn pri lg" disabled={working || missingRequired.length > 0} onClick={() => start(file, picksToMapping())}>매칭 실행</button>
+              <button type="button" className="btn pri" disabled={working || missingRequired.length > 0} onClick={() => start(file, picksToMapping())}>매칭 실행</button>
             </Reason>
           </div>
-        </section>
-      )}
-
-      {run && (
-        <section className="sec" aria-label="매칭 진행" aria-live="polite">
-          <MockNotice path="/jobs" />
-          <p className="summary-line"><b>{run.job?.state === 'queued' ? '대기 중' : '매칭 중'}</b></p>
-          <ul className="stages">
-            {(run.job?.stages ?? []).map((s) => (
-              <li key={s.name}><span>{s.name}</span><span className="num">{s.done}/{s.total}</span><span className="note">{STAGE_STATE[s.state]}</span></li>
-            ))}
-          </ul>
         </section>
       )}
 
@@ -317,7 +388,7 @@ const UploadPage = () => {
           </tbody>
         </table>
       </DevInfo>
-    </>
+    </div>
   )
 }
 

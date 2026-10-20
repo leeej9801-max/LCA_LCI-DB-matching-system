@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Query
 from psycopg.rows import dict_row
 
 from app.db.connection import conninfo
+from app.carbon import carbon_of
 from app.errors import ApiError
 from app.schemas import Dataset, DatasetDetail, DatasetSearchResponse
 
@@ -18,7 +19,8 @@ DATASET_ID = re.compile(r"^list-\d+$")
 BASE = """
 WITH d AS (SELECT *, count(*) OVER (PARTITION BY name_ko) AS dup_count FROM lci_dataset)
 SELECT dataset_id, name_ko, name_en, category, developer, dev_year, version, has_xml, list_sn, ref_flow_unit, dup_count,
-       dataset_type, allocation, cutoff, geography, tech_description
+       dataset_type, allocation, cutoff, geography, tech_description,
+       gwp_total, gwp_fossil, gwp_biogenic, gwp_luluc, gwp_method
 FROM d
 """
 
@@ -122,5 +124,6 @@ def get_dataset(dataset_id: str, conn=Depends(get_conn)):  # A06
     return {
         **to_item(r), "data_type": r["dataset_type"], "allocation": r["allocation"], "cutoff": r["cutoff"], "geography": r["geography"],
         "tech_summary": r["tech_description"],
+        "carbon": carbon_of(r["gwp_total"], r["gwp_fossil"], r["gwp_biogenic"], r["gwp_luluc"], r["gwp_method"], r["ref_flow_unit"]),
         "duplicates": [{"dataset_id": d["dataset_id"], "org": d["developer"], "year": d["dev_year"], "version": version(d["version"])} for d in dups],
     }

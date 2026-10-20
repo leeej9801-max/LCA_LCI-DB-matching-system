@@ -71,6 +71,7 @@ export const previewUpload = async (params, form) => {
   return [200, {
     filename: r.name,
     rows_total: r.rows.length,
+    rows_skipped: { example: 0, empty_name: 0 },
     column_mapping: detectMapping(r.columns, r.rows),
     file_columns: r.columns,
     preview_rows: r.rows.slice(0, 5).map((row) => r.columns.map((_, i) => row[i] ?? '')),

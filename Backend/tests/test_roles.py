@@ -122,8 +122,14 @@ def test_filter_is_applied_before_cutting_the_ranking(roled):
     assert [d for d, _ in part_d] == [d for d, _ in ranking(roled, "냉연강판", roles=["process"])[1]][:2] and len(part_d) == 2
 
 
-def run_session(ci, rows):
-    """rows: [(품명, 구분 원문)] → (session_id, 매칭 결과로 만든 SessionPayload dict)."""
+T13_SETTINGS = {"search_base": "rrf", "lexicon_mode": None, "veto_mode": None, "confidence": {"rule": "R0", "params": {}}}  # E4a 이전의 검색
+
+
+E4A_SETTINGS = {"search_base": "rrf", "lexicon_mode": "D", "veto_mode": "Vd", "confidence": {"rule": "R1", "params": {"tau": 0.55}}}  # E4c 이전(E4a) 기본
+
+
+def run_session(ci, rows, settings=None):
+    """rows: [(품명, 구분 원문)] → (session_id, 매칭 결과로 만든 SessionPayload dict). settings 를 안 주면 앱 기본 설정."""
     sid = "abcdefABCDEF"
     items = clean_rows([{"source_row": i + 2, "name": n, "spec": "", "unit": "kg", "quantity": "1", "role": r, "part_no": f"P{i}"}
                         for i, (n, r) in enumerate(rows)])
@@ -136,14 +142,14 @@ def run_session(ci, rows):
                          (sid, it["row_no"], it["source_row"], it["raw_name"], it["raw_spec"], it["raw_unit"], it["raw_qty"], it["clean_name"],
                           it["clean_spec"], it["clean_unit"], it["clean_unit_display"], it["clean_qty"], it["norm_text"], it["query_key"],
                           json.dumps(it["issues"]), it["target_status"], it["target_reason"], it["input_role"], it["part_no"]))
-        match.match_project(conn, sid, FakeEmbedder())
+        match.match_project(conn, sid, FakeEmbedder(), settings=settings)
         conn.commit()
         return sid, match.build_rows(conn, sid)
 
 
 @needs_db
 def test_rows_search_only_inside_their_roles_and_say_so(roled):
-    _, rows = run_session(roled, [("냉연강판", "소재"), ("냉연강판", "공정"), ("냉연강판", "")])
+    _, rows = run_session(roled, [("냉연강판", "소재"), ("냉연강판", "공정"), ("냉연강판", "")], T13_SETTINGS)  # 강등(Vd)을 끄고 구분 필터만 본다
     mat, proc, free = rows
     assert {c["role"] for c in mat["candidates"]} <= {"소재", "합본"} and {c["role"] for c in proc["candidates"]} == {"공정"}
     with psycopg.connect(roled) as conn:  # 구분 없음 → 저장된 후보(접기 전)에 모든 역할이 섞여 있다
@@ -163,8 +169,8 @@ def test_rows_search_only_inside_their_roles_and_say_so(roled):
 
 @needs_db
 def test_without_role_the_saved_candidates_equal_the_unfiltered_search(roled):
-    """구분이 없으면 T13 전과 같다: 저장된 후보 20개가 필터 없는 하이브리드 검색 결과와 같다."""
-    run_session(roled, [("냉연강판", "")])
+    """구분이 없으면 T13 전과 같다: 저장된 후보(TOP_N개)가 필터 없는 하이브리드 검색 결과와 같다(사전·Veto 를 끈 설정)."""
+    run_session(roled, [("냉연강판", "")], T13_SETTINGS)
     with psycopg.connect(roled) as conn:
         version, model, items = load_index(conn)
         t = tfidf_rank(items, "냉연강판")
@@ -172,6 +178,25 @@ def test_without_role_the_saved_candidates_equal_the_unfiltered_search(roled):
         sn = {it["dataset_id"]: it["list_sn"] for it in items}
         saved = [r[0] for r in conn.execute("SELECT dataset_id FROM match_candidate ORDER BY rank").fetchall()]
     assert saved == [ds for ds, _ in rrf([t, d], sn)][:match.TOP_N]
+
+
+@needs_db
+def test_without_role_default_settings_push_opposite_role_back(roled):
+    """E4a: RRF 검색에 Vd 를 켜면 '냉연강판'은 소재로 추정되어 공정 데이터셋(list-1, list-5)만 뒤로 가고 나머지 순서는 그대로다(E4c 로 앱 기본이 밀집 단독이 되어 설정을 명시)."""
+    run_session(roled, [("냉연강판", "")], E4A_SETTINGS)
+    with psycopg.connect(roled) as conn:
+        version, model, items = load_index(conn)
+        t = tfidf_rank(items, "냉연강판")
+        d = dense_rank(conn, version, model, FakeEmbedder().embed(["냉연강판"])[0])
+        sn = {it["dataset_id"]: it["list_sn"] for it in items}
+        saved = [r[0] for r in conn.execute("SELECT dataset_id FROM match_candidate ORDER BY rank").fetchall()]
+    plain = [ds for ds, _ in rrf([t, d], sn)]
+    from app.bom.veto import demote
+    with psycopg.connect(roled) as conn:
+        role_of = dict(conn.execute("SELECT dataset_id, role FROM lci_dataset").fetchall())
+    expected = [ds for ds, _ in rrf([demote(t, role_of, "process"), demote(d, role_of, "process")], sn)][:match.TOP_N]
+    assert saved == expected and saved != plain[:match.TOP_N]
+    assert saved.index("list-3") < saved.index("list-1") and "list-5" not in saved[:saved.index("list-1")]  # 공정 데이터셋(list-1, list-5)은 소재 후보 뒤로
 
 
 @needs_db
@@ -212,7 +237,7 @@ def test_upload_with_role_columns_end_to_end(client, roled):  # noqa: F811
     head = lines[0]
     assert lines[1][head.index("부품번호")] == "P01" and lines[1][head.index("구분")] == "공정" and lines[1][head.index("데이터셋 역할")] == "공정"
     wb = openpyxl.load_workbook(io.BytesIO(client.get(f"/api/sessions/{sid}/export").content))
-    assert [c.value for c in wb["미승인·제외"][1]][1:3] == ["부품번호", "구분"]
+    assert [c.value for c in wb["미승인·제외"][2]][1:3] == ["부품번호", "구분"]  # X1: 1행은 그룹 띠, 2행이 열 이름
     assert "구분 필터 규칙" in {row[0].value for row in wb["정보"].iter_rows(min_row=2)}
 
 

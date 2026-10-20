@@ -17,6 +17,9 @@ export const createSession = (file, mapping) =>
 
 export const getSampleCsv = () => client.get('/sample.csv', { responseType: 'blob' }).then((r) => r.data) // A08
 
+// kind: 'blank'(빈 양식) | 'sample'(예시가 채워진 샘플). FTA 원산지 확인용 소요부품(자재) 명세서 xlsx
+export const getBomTemplate = (kind) => client.get('/bom/template', { params: { kind }, responseType: 'blob' }).then((r) => r.data) // A08c
+
 export const getTemplate = () => client.get('/template.xlsx', { responseType: 'blob' }).then((r) => r.data) // A08b
 
 export const getSession = (id) => client.get(base(id)).then((r) => r.data) // A02

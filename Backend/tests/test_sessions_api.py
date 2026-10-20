@@ -100,7 +100,7 @@ def test_upload_job_and_session(client, monkeypatch):
     assert rows[3]["target"] == {"status": "제외", "reason": "품명 없음"} and rows[3]["match_state"] == "no_answer"
     sm = s.json()["summary"]
     assert (sm["total"], sm["target"], sm["exclude"], sm["review"]["pending"], sm["review"]["excluded"], sm["match"]["no_answer"]) == (
-        4, 3, 1, 3, 1, 1)
+        4, 3, 1, 3, 1, 2)  # 품명 없음 1행 + T14: 대표 1순위 신뢰도 '낮음' 1행
     assert sm["needs_review"] == 3 and sm["match"]["vetoed"] == 0
     assert sm["needs_info"] == 1 and rows[2]["conversion"]["missing"] == ["개당 중량"]  # 볼트 EA ← 기본 선택(kg 데이터셋)
 

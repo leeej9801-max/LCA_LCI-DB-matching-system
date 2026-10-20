@@ -52,7 +52,8 @@ def detect(header, first_row, override):
         if field in override:
             source, method = override[field], "manual"
         else:
-            source = next((h for h in header if norm(h) in ALIASES[field]), None)  # 여럿이면 첫 컬럼
+            hits = [h for h in header if norm(h) in ALIASES[field]]  # 여럿이면 첫 컬럼. 품명(국문)·품명(영문)이 같이 있으면 국문
+            source = next((h for h in hits if "국문" in h), hits[0] if hits else None)
             method = "auto" if source else "missing"
         value = first_row[header.index(source)] if source and first_row else ""
         out.append({"field": field, "required": required, "source": source, "method": method, "sample": value.strip() or None})

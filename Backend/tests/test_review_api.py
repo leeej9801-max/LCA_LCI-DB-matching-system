@@ -168,11 +168,12 @@ def test_export_xlsx_csv_and_409(sess):
     assert 'filename="LCI-Match_BOM_' in cd and "filename*=UTF-8''LCI-Match_%EB%82%B4%20BOM_" in cd and cd.endswith(".xlsx")
     wb = openpyxl.load_workbook(io.BytesIO(r.content))
     assert wb.sheetnames == ["승인", "미승인·제외", "정보"]
-    assert (wb["승인"].max_row, wb["미승인·제외"].max_row) == (2, 5)  # 머리행 + 승인 1 / 머리행 + 나머지 4
-    assert wb["승인"].freeze_panes == "A2" and wb["승인"]["A1"].value == "원본 행"
-    head = [c.value for c in wb["승인"][1]]
+    # X1: 1행 그룹 띠, 2행 열 이름, 3행부터 데이터(+ 합계 한 줄)
+    assert (wb["승인"].max_row, wb["미승인·제외"].max_row) == (4, 6)  # 띠·머리 2행 + 승인 1 + 합계 1 / 띠·머리 2행 + 나머지 4
+    assert wb["승인"].freeze_panes == "E3" and wb["승인"]["A1"].value == "① 내가 올린 BOM (원본)" and wb["승인"]["A2"].value == "원본 행"
+    head = [c.value for c in wb["승인"][2]]
     assert head[:4] == ["원본 행", "부품번호", "구분", "품명"] and "데이터셋 역할" in head
-    assert [c.value for c in wb["승인"][2]][1:3] == [None, None]  # 구분 열이 없는 BOM: 빈 칸
+    assert [c.value for c in wb["승인"][3]][1:3] == [None, None]  # 구분 열이 없는 BOM: 빈 칸
     info = {row[0].value: row[1].value for row in wb["정보"].iter_rows(min_row=2)}
     assert info["세션 ID"] == sid and info["안내"] == "이 결과는 사람이 승인한 매칭이며 인증용 계산이 아닙니다."
     c = client.get(f"/api/sessions/{sid}/export", params={"format": "csv"})
