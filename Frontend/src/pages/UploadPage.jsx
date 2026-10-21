@@ -223,6 +223,7 @@ const UploadPage = () => {
             ))}
           </div>
           <p className="hint">FTA 원산지 자재명세서 양식을 그대로 올려도 됩니다. 구분을 비우면 품명으로 공정 여부를 추정합니다.</p>
+          <p className="hint">올린 BOM은 서버에 저장되어 이 화면에서 결과를 볼 때 쓰입니다. <strong>회사 기밀 BOM은 올리지 마세요.</strong> 저장 기간: 24시간.</p>
         </section>
 
         <div className="u7-side">

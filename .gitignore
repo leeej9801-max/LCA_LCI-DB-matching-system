@@ -13,6 +13,7 @@ dist/
 !Frontend/.env.development
 !Frontend/.env.real
 !.env.example
+!.env.prod.example
 
 # Obsidian 개인 설정 (문서 자체는 추적)
 docs/LCA/.obsidian/
