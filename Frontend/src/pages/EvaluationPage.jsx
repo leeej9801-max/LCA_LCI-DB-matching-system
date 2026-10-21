@@ -68,7 +68,9 @@ const EvaluationPage = () => {
           {!onMine && state.status === 'loading' && <p role="status">시험 결과를 불러오는 중입니다…</p>}
           {!onMine && state.status === 'error' && (
             <p className="err" role="alert">
-              시험 결과를 불러오지 못했습니다. 서버가 켜져 있는지 확인한 뒤 다시 시도해 주세요. ({state.detail}){' '}
+              {import.meta.env.DEV
+                ? `시험 결과를 불러오지 못했습니다. 서버가 켜져 있는지 확인한 뒤 다시 시도해 주세요. (${state.detail})`
+                : '서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.'}{' '}
               <button type="button" className="text-btn" onClick={() => { setState({ status: 'loading' }); setAttempt((n) => n + 1) }}>다시 시도</button>
             </p>
           )}

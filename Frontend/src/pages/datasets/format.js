@@ -6,8 +6,11 @@ export const orgYearVersion = ({ org, year, version }) =>
   [dash(org), dash(year), version != null && `v${version}`].filter(Boolean).join(' · ')
 
 // 연결 실패(응답 없음) 또는 5xx 일 때 붙이는 안내. 개발 서버 프록시는 백엔드가 꺼져 있으면 빈 본문의 500을 돌려준다
+// 운영 빌드에서는 개발자용 주소 대신 일반 문장
 export const serverHint = (error) =>
-  error.status == null || error.status >= 500 ? '백엔드(127.0.0.1:8000)가 켜져 있는지 확인하세요.' : null
+  error.status == null || error.status >= 500
+    ? (import.meta.env.DEV ? '백엔드(127.0.0.1:8000)가 켜져 있는지 확인하세요.' : '서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.')
+    : null
 
 const OLD_YEARS = 10 // 경과 연수가 이 이상이면 "오래된 데이터" 글자를 붙인다 (색 경고 아님)
 

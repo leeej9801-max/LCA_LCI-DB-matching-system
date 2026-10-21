@@ -37,6 +37,7 @@ a{color:var(--navy)}
 
 /* 본문 */
 .main{max-width:1200px;margin:0 auto;padding:28px 24px 48px;display:flex;flex-direction:column;gap:18px}
+.site-foot{max-width:1200px;margin:0 auto;padding:0 24px 28px;font-size:var(--fs-xs);color:var(--sub)}
 .head{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px}
 .head h1{margin:0;font-size:22px;font-weight:700}
 .head p{flex-basis:100%;margin:2px 0 0;color:var(--muted)}
@@ -405,6 +406,7 @@ aside.api{padding-top:12px;border-top:1px solid var(--line)}
   .ds-detail{flex-basis:auto;width:100%;position:static;max-height:none}
 }
 @media (max-width:640px){
+  .site-foot{padding:0 16px 24px}
   /* 두 줄: 로고·관리 / 메뉴 5개를 균등 분배(가로 스크롤 없음) */
   .topbar-in{height:auto;flex-wrap:wrap;padding:0 16px;gap:0 12px}
   .logo{order:1;flex:1;font-size:15px;line-height:44px}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useMatch } from 'react-router'
 import Reason from '@/components/Reason'
+import { HIDE_ADMIN } from '@/env'
 import { readRecent } from '@/pages/evaluation/recentSessions'
 
 const ADMIN = [
@@ -50,7 +51,7 @@ const Layout = () => {
             <NavLink to="/datasets">데이터셋</NavLink>
             <NavLink to="/evaluation">성능 확인</NavLink>
           </nav>
-          <div className="admin" ref={menuRef}>
+          {!HIDE_ADMIN && <div className="admin" ref={menuRef}>
             <button
               ref={buttonRef}
               type="button"
@@ -68,12 +69,13 @@ const Layout = () => {
                 ))}
               </ul>
             )}
-          </div>
+          </div>}
         </div>
       </header>
       <main className="main">
         <Outlet />
       </main>
+      <footer className="site-foot">출처: 한국환경산업기술원(KEITI) 국가 LCI DB, 비상업 용도, 재배포 금지</footer>
     </div>
   )
 }
