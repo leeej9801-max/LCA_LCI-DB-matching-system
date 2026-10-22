@@ -5,6 +5,8 @@
 """
 import csv
 import io
+from pathlib import Path
+from typing import Literal
 
 from fastapi import APIRouter
 from fastapi.responses import Response
@@ -99,3 +101,14 @@ def template_xlsx():  # A08b
     wb.save(buf)
     return Response(buf.getvalue(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     headers={"Content-Disposition": "attachment; filename=\"BOM_template.xlsx\"; filename*=UTF-8''BOM_%EC%96%91%EC%8B%9D.xlsx"})
+
+
+TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "bom" / "templates"
+FTA_FILES = {"blank": "fta-bom-template.xlsx", "sample": "fta-bom-sample.xlsx"}
+
+
+@router.get("/bom/template")
+def bom_template(kind: Literal["blank", "sample"]):  # A08c: FTA 원산지 확인용 소요부품(자재) 명세서 양식
+    name = FTA_FILES[kind]
+    return Response((TEMPLATE_DIR / name).read_bytes(), headers={"Content-Disposition": f'attachment; filename="{name}"'},
+                    media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

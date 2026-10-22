@@ -4,10 +4,12 @@ import json
 
 import psycopg
 import pytest
+from psycopg.rows import dict_row
 from fastapi.testclient import TestClient
 
 from app import jobs
 from app.embedder import OLLAMA_DOWN
+from app.api.datasets import get_conn
 from app.api.sessions import get_db
 from app.schemas import JobStatus, PreviewResponse, SessionPayload
 from main import app
@@ -23,7 +25,11 @@ def client(bomdb):  # noqa: F811
     def override():
         with psycopg.connect(bomdb) as conn:
             yield conn
+    def override_datasets():  # A06 도 임시 DB 로: 안 바꾸면 기본 lci DB 에 붙어, 마이그레이션 안 된 환경(CI)에서 깨진다
+        with psycopg.connect(bomdb, row_factory=dict_row) as conn:
+            yield conn
     app.dependency_overrides[get_db] = override
+    app.dependency_overrides[get_conn] = override_datasets
     c = TestClient(app)  # with 없이: lifespan(실제 작업자)을 띄우지 않는다
     c.ci = bomdb
     try:
@@ -94,7 +100,7 @@ def test_upload_job_and_session(client, monkeypatch):
     assert rows[3]["target"] == {"status": "제외", "reason": "품명 없음"} and rows[3]["match_state"] == "no_answer"
     sm = s.json()["summary"]
     assert (sm["total"], sm["target"], sm["exclude"], sm["review"]["pending"], sm["review"]["excluded"], sm["match"]["no_answer"]) == (
-        4, 3, 1, 3, 1, 1)
+        4, 3, 1, 3, 1, 2)  # 품명 없음 1행 + T14: 대표 1순위 신뢰도 '낮음' 1행
     assert sm["needs_review"] == 3 and sm["match"]["vetoed"] == 0
     assert sm["needs_info"] == 1 and rows[2]["conversion"]["missing"] == ["개당 중량"]  # 볼트 EA ← 기본 선택(kg 데이터셋)
 

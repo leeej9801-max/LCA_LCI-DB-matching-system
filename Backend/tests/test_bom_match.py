@@ -52,7 +52,7 @@ def bomdb(tempdb):  # noqa: F811
 
 
 @pytest.mark.parametrize("rt,rd,expected", [
-    (1, 1, "높음"), (2, 3, "보통"), (1, 15, "보통"), (None, 1, "보통"), (4, 1, "보통"), (2, 4, "낮음"), (None, None, "낮음"),
+    (1, 1, "높음"), (2, 3, "보통"), (1, 15, "보통"), (None, 1, "낮음"), (1, None, "낮음"), (4, 1, "보통"), (2, 4, "낮음"), (None, None, "낮음"),  # T14: 한쪽이 None 이면 최대 낮음
 ])
 def test_confidence_rule(rt, rd, expected):
     assert match.confidence(rt, rd) == expected
@@ -66,7 +66,8 @@ def cand(name, score, **kw):
     return {"dataset_id": kw.get("ds", name), "name_ko": name, "name_en": "x", "category": "c", "org": "o", "year": kw.get("year", 2020),
             "version": "1.0.0", "reference_unit": "kg", "score_rrf": score, "confidence": "보통", "rank_tfidf": 1, "rank_dense": 2,
             "vetoed": False, "veto_rule_id": None, "has_xml": True, "geography": None, "allocation": None, "cutoff": None, "tech": None,
-            "list_sn": kw.get("sn", 1), "role": kw.get("role")}
+            "list_sn": kw.get("sn", 1), "role": kw.get("role"),
+            "gwp_total": None, "gwp_fossil": None, "gwp_biogenic": None, "gwp_luluc": None, "gwp_method": None}
 
 
 ITEM = dict(zip(match.ITEM_COLS, (1, 2, None, None, "a", "", "kg", "1", "a", "", "kg", "kg", 1.0, "a", "k", [], "대상", "",
@@ -118,8 +119,9 @@ def test_match_dedupes_queries_caches_and_stores_20(bomdb, monkeypatch):
     with psycopg.connect(bomdb) as conn:
         r2 = match.match_project(conn, add_session(bomdb, ["냉연강판"], "zzzzzzzzzzzz"), emb)
         counts = conn.execute("SELECT query_key, count(*) FROM match_candidate WHERE run_id = %s GROUP BY 1", (r["run_id"],)).fetchall()
+        total = conn.execute("SELECT count(*) FROM lci_dataset").fetchone()[0]
     assert r2["cache_hits"] == 1 and sum(len(c) for c in emb.calls) == 2  # 두 번째 세션은 캐시 적중, 임베딩 호출 없음
-    assert sorted(n for _, n in counts) == [20, 20]  # 질의마다 상위 20
+    assert sorted(n for _, n in counts) == [min(match.TOP_N, total)] * 2  # 질의마다 상위 TOP_N(E4d: 100, 시험 DB 는 데이터셋이 그보다 적다)
 
 
 @needs_db

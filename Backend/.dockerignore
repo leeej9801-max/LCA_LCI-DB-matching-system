@@ -1,0 +1,9 @@
+# 이미지에 넣지 않는 것: 환경 파일, 시험, 평가 리포트(실행 때 읽기 전용으로 마운트), 가상환경
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.env*
+tests
+README.md
+app/data/eval_reports

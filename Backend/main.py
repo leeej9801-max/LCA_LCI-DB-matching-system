@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app import errors
-from app.api import datasets, jobs, sample, sessions
+from app.api import datasets, evaluation, jobs, sample, sessions
 from app.db.connection import conninfo
 from app.jobs import Worker
 
@@ -26,6 +26,7 @@ app.include_router(datasets.router, prefix="/api")
 app.include_router(sessions.router, prefix="/api")
 app.include_router(jobs.router, prefix="/api")
 app.include_router(sample.router, prefix="/api")
+app.include_router(evaluation.router, prefix="/api")
 
 @app.get("/")
 def read_root():

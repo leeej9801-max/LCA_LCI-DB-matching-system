@@ -33,6 +33,12 @@ def result(status, unit, message, value=None, missing=(), method=None):
     return {"status": status, "value": value, "unit": unit, "message": message, "missing": list(missing), "method": method}
 
 
+def dataset_unit(raw):
+    """데이터셋 기준 단위 원문 → 환산 결과(Conversion.unit)에 나오는 단위. 정규 단위(Item(s)·Spot → EA 등), 모르는 표기는 원문 그대로, 비면 None."""
+    ds = (norm_unit(raw)[0] or DATASET_UNITS.get(raw.strip().lower())) if raw else None
+    return ds or raw or None
+
+
 def convert(quantity, bom_unit, bom_display, ds_unit_raw, ds_amount=None, overrides=None):
     """Conversion. bom_unit 은 clean.unit(정규 단위 또는 None), ds_unit_raw 는 lci_dataset.ref_flow_unit 원문."""
     ov = overrides or {}

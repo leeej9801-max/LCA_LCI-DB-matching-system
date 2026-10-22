@@ -1,17 +1,23 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
+import { searchDatasets } from '@/api/datasets'
 import DevInfo from '@/components/DevInfo'
-import Info from '@/components/Info'
 import MockNotice from '@/components/MockNotice'
-import terms from '@/terms'
 import DatasetBrowser from './datasets/DatasetBrowser'
 import DatasetDetail from './datasets/DatasetDetail'
 
 // S4 데이터셋 탐색 (FR-802). 검색 조건과 선택(id)은 URL 쿼리에 둔다 (새로고침·뒤로가기 유지)
 const DatasetsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
+  const [allCount, setAllCount] = useState(null) // 국가 LCI DB 전체 건수(같은 이름 포함). 못 가져오면 건수는 쓰지 않는다
   const selectedId = searchParams.get('id')
   const { id: _id, ...params } = Object.fromEntries(searchParams) // 목록 요청에는 상세 선택(id)을 넣지 않는다
+
+  useEffect(() => {
+    let ignore = false
+    searchDatasets({ limit: 1, group_duplicates: 'false' }).then((d) => !ignore && setAllCount(d.total)).catch(() => {})
+    return () => { ignore = true }
+  }, [])
 
   // 빈 값은 쿼리에서 지운다. 조건을 바꾸면 첫 페이지로 돌아간다
   const update = (changes, options) => {
@@ -36,17 +42,22 @@ const DatasetsPage = () => {
   }, [selectedId])
 
   return (
-    <>
-      <div className="head">
-        <h1>데이터셋 탐색</h1>
-        <p>국가 LCI DB의 {terms.lci_dataset.label}<Info term="lci_dataset" />을 이름·분류로 검색합니다.</p>
+    <div className="u7">
+      <div className="u7-head">
+        <div>
+          <h1>국가 LCI DB</h1>
+          <p className="meta lg">국가 LCI DB{allCount != null && ` ${allCount.toLocaleString()}건`} · 이름이나 분류로 찾아 내용을 확인합니다.</p>
+        </div>
       </div>
 
       <MockNotice path="/datasets" />
 
-      <DatasetBrowser params={params} setParams={update} selectedId={selectedId} onRowClick={(id) => update({ id })} />
-
-      {selectedId && <DatasetDetail id={selectedId} onSelect={(id) => update({ id })} onClose={() => update({ id: '' })} />}
+      <div className={selectedId ? 'ds-layout open' : 'ds-layout'}>
+        <div className="ds-main">
+          <DatasetBrowser params={params} setParams={update} selectedId={selectedId} onRowClick={(id) => update({ id })} />
+        </div>
+        {selectedId && <DatasetDetail id={selectedId} onSelect={(id) => update({ id })} onClose={() => update({ id: '' })} />}
+      </div>
 
       <DevInfo>
         <p className="note">S4 · FR-802 · MVP</p>
@@ -58,7 +69,7 @@ const DatasetsPage = () => {
           </tbody>
         </table>
       </DevInfo>
-    </>
+    </div>
   )
 }
 

@@ -1,5 +1,5 @@
 {
-  "_note": "A05·A06 mock 풀. list-* 5건은 datasets.search.json 항목을 그대로 옮긴 것이다. mock-* 항목은 필터·정렬·동명 묶음을 확인하기 위한 예시 데이터이며 국가 LCI DB의 실제 값이 아님 (이름·연도·버전·XML 보유 여부·분류 모두 예시, 목록 행은 없음). geography·allocation·cutoff·tech_summary: list-* 는 fixture 에 값이 없어 null, mock-* 는 예시 값(null 도 일부러 섞음).",
+  "_note": "A05·A06 mock 풀. list-* 5건은 datasets.search.json 항목을 그대로 옮긴 것이다. mock-* 항목은 필터·정렬·동명 묶음을 확인하기 위한 예시 데이터이며 국가 LCI DB의 실제 값이 아님 (이름·연도·버전·XML 보유 여부·분류 모두 예시, 목록 행은 없음). geography·allocation·cutoff·tech_summary: list-* 는 fixture 에 값이 없어 null, mock-* 는 예시 값(null 도 일부러 섞음). carbon(배출계수): 예시 값이며 국가 LCI DB의 실제 값이 아님. 값 있는 항목과 null 항목을 섞음(X1).",
   "items": [
     {
       "dataset_id": "list-100",
@@ -16,7 +16,16 @@
       "geography": null,
       "allocation": null,
       "cutoff": null,
-      "tech_summary": null
+      "tech_summary": null,
+      "carbon": {
+        "total": 0.98384,
+        "fossil": 0.95337,
+        "biogenic": 0.02791,
+        "land_use": 0.00255,
+        "unit": "kg CO₂e",
+        "per": "kg",
+        "method": "Climate change (04.00.016)"
+      }
     },
     {
       "dataset_id": "list-90",
@@ -33,7 +42,16 @@
       "geography": null,
       "allocation": null,
       "cutoff": null,
-      "tech_summary": null
+      "tech_summary": null,
+      "carbon": {
+        "total": 1.62,
+        "fossil": 1.55,
+        "biogenic": 0.05,
+        "land_use": 0.02,
+        "unit": "kg CO₂e",
+        "per": "kg",
+        "method": "Climate change (04.00.016)"
+      }
     },
     {
       "dataset_id": "list-89",
@@ -50,7 +68,8 @@
       "geography": null,
       "allocation": null,
       "cutoff": null,
-      "tech_summary": null
+      "tech_summary": null,
+      "carbon": null
     },
     {
       "dataset_id": "list-113",
@@ -67,7 +86,16 @@
       "geography": null,
       "allocation": null,
       "cutoff": null,
-      "tech_summary": null
+      "tech_summary": null,
+      "carbon": {
+        "total": 0.742,
+        "fossil": 0.7,
+        "biogenic": 0.03,
+        "land_use": 0.012,
+        "unit": "kg CO₂e",
+        "per": "kg",
+        "method": "Climate change (04.00.016)"
+      }
     },
     {
       "dataset_id": "list-88",
@@ -84,7 +112,16 @@
       "geography": null,
       "allocation": null,
       "cutoff": null,
-      "tech_summary": null
+      "tech_summary": null,
+      "carbon": {
+        "total": 2.05,
+        "fossil": 1.98,
+        "biogenic": 0.05,
+        "land_use": 0.02,
+        "unit": "kg CO₂e",
+        "per": "kg",
+        "method": "Climate change (04.00.016)"
+      }
     },
     {
       "dataset_id": "mock-1",
@@ -101,7 +138,16 @@
       "geography": "KR",
       "allocation": "질량 기준",
       "cutoff": "99%",
-      "tech_summary": "냉간 압연 공정 평균 기술(예시)"
+      "tech_summary": "냉간 압연 공정 평균 기술(예시)",
+      "carbon": {
+        "total": 1.41,
+        "fossil": 1.35,
+        "biogenic": 0.04,
+        "land_use": 0.02,
+        "unit": "kg CO₂e",
+        "per": "kg",
+        "method": "Climate change (04.00.016)"
+      }
     },
     {
       "dataset_id": "mock-2",
@@ -118,7 +164,8 @@
       "geography": "KR",
       "allocation": "질량 기준",
       "cutoff": null,
-      "tech_summary": "냉간 압연 공정(예시)"
+      "tech_summary": "냉간 압연 공정(예시)",
+      "carbon": null
     },
     {
       "dataset_id": "mock-3",
@@ -135,7 +182,16 @@
       "geography": "KR",
       "allocation": "질량 기준",
       "cutoff": "99%",
-      "tech_summary": "열간 압연 공정 평균 기술(예시)"
+      "tech_summary": "열간 압연 공정 평균 기술(예시)",
+      "carbon": {
+        "total": 2.9,
+        "fossil": 2.8,
+        "biogenic": 0.07,
+        "land_use": 0.03,
+        "unit": "kg CO₂e",
+        "per": "kg",
+        "method": "Climate change (04.00.016)"
+      }
     },
     {
       "dataset_id": "mock-4",
@@ -152,7 +208,8 @@
       "geography": "KR",
       "allocation": "경제적 기준",
       "cutoff": "95%",
-      "tech_summary": "용융아연도금 공정(예시)"
+      "tech_summary": "용융아연도금 공정(예시)",
+      "carbon": null
     },
     {
       "dataset_id": "mock-5",
@@ -169,7 +226,8 @@
       "geography": "GLO",
       "allocation": null,
       "cutoff": null,
-      "tech_summary": null
+      "tech_summary": null,
+      "carbon": null
     },
     {
       "dataset_id": "mock-6",
@@ -186,7 +244,16 @@
       "geography": "GLO",
       "allocation": "질량 기준",
       "cutoff": "99%",
-      "tech_summary": "알루미늄 압연 판재 생산(예시)"
+      "tech_summary": "알루미늄 압연 판재 생산(예시)",
+      "carbon": {
+        "total": 8.2,
+        "fossil": 8.0,
+        "biogenic": 0.15,
+        "land_use": 0.05,
+        "unit": "kg CO₂e",
+        "per": "kg",
+        "method": "Climate change (04.00.016)"
+      }
     },
     {
       "dataset_id": "mock-7",
@@ -203,7 +270,8 @@
       "geography": "KR",
       "allocation": "질량 기준",
       "cutoff": "99%",
-      "tech_summary": "사출 성형용 폴리프로필렌 중합(예시)"
+      "tech_summary": "사출 성형용 폴리프로필렌 중합(예시)",
+      "carbon": null
     },
     {
       "dataset_id": "mock-8",
@@ -220,7 +288,16 @@
       "geography": "KR",
       "allocation": "질량 기준",
       "cutoff": "99%",
-      "tech_summary": "고밀도 폴리에틸렌 중합(예시)"
+      "tech_summary": "고밀도 폴리에틸렌 중합(예시)",
+      "carbon": {
+        "total": 1.95,
+        "fossil": 1.9,
+        "biogenic": 0.03,
+        "land_use": 0.02,
+        "unit": "kg CO₂e",
+        "per": "kg",
+        "method": "Climate change (04.00.016)"
+      }
     },
     {
       "dataset_id": "mock-9",
@@ -237,7 +314,16 @@
       "geography": "KR",
       "allocation": null,
       "cutoff": null,
-      "tech_summary": "ABS 수지 중합(예시)"
+      "tech_summary": "ABS 수지 중합(예시)",
+      "carbon": {
+        "total": 3.1,
+        "fossil": 3.0,
+        "biogenic": 0.07,
+        "land_use": 0.03,
+        "unit": "kg CO₂e",
+        "per": "kg",
+        "method": "Climate change (04.00.016)"
+      }
     }
   ]
 }

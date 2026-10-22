@@ -68,3 +68,17 @@ def test_slices_mark_small_samples():
     assert s["input_style"]["약어"]["n"] == 2 and s["input_style"]["약어"]["small"] is True
     assert s["hard_pair_group"]["있음"]["n"] == 1 and s["hard_pair_group"]["없음"]["n"] == 3
     assert s["input_style"]["약어"]["top1"] == pytest.approx(0.5)
+
+
+def test_row_detail_ranks_scores_and_level():
+    from app.bom.match import confidence
+    r = row("B", [("A", 0.03), ("B", 0.02)])
+    c0 = [("B", 0.9), ("A", 0.5)]
+    c1 = [("A", 0.81), ("B", 0.7)]
+    assert m.row_detail(r, c0, c1, confidence) == {"confidence": "보통", "rank_tfidf": 2, "rank_dense": 1, "score_dense": 0.81, "gold_rank": 2}
+    # 1위가 TF-IDF 목록에 없으면 순위 None, 등급은 앱 규칙대로 낮음
+    assert m.row_detail(r, [("B", 0.9)], c1, confidence)["confidence"] == "낮음"
+    # C0·C1 을 돌리지 않았으면 순위·점수·등급 모두 None(지어내지 않는다)
+    assert m.row_detail(r, None, None, confidence) == {"confidence": None, "rank_tfidf": None, "rank_dense": None, "score_dense": None, "gold_rank": 2}
+    # 후보가 없는 행
+    assert m.row_detail(row(None, []), c0, c1, confidence)["confidence"] is None

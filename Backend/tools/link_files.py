@@ -198,6 +198,27 @@ def _estimate_reference(zf, text):
     return found[0] if len(found) == 1 else None
 
 
+# 영향평가 결과(<LCIAResult>)에서 읽는 기후변화 4개 항목. shortDescription 이 정확히 이 이름인 것만 (다른 영향범주는 읽지 않는다)
+GWP_LABELS = {"Climate change": "total", "Climate change-Fossil": "fossil", "Climate change-Biogenic": "biogenic",
+              "Climate change-Land use and land use change": "luluc"}
+
+
+def read_lcia(text):
+    """기후변화 4개 항목의 meanAmount(문자열 그대로)와 합계 항목의 방법 버전. 하나도 없으면 None.
+    값은 데이터셋의 기준 흐름 양당 결과다(1 기준 단위당으로 바꾸는 일은 적재기가 한다)."""
+    out = {}
+    for body in re.findall(r"<(?:\w+:)?LCIAResult>(.*?)</(?:\w+:)?LCIAResult>", text, re.S):
+        key = GWP_LABELS.get((_tags(body, "shortDescription") or [None])[0])
+        if key is None or key in out:
+            continue
+        amount = re.search(r"<meanAmount>([^<]*)<", body)
+        out[key] = amount[1].strip() if amount else None
+        if key == "total":
+            version = re.search(r'referenceToLCIAMethodDataSet[^>]*\sversion="([^"]*)"', body)
+            out["method_version"] = version[1] if version else None
+    return out or None
+
+
 def read_zip(path):
     """XML ZIP 한 개의 단서. 크기 0인 항목은 건너뛴다."""
     with zipfile.ZipFile(path) as zf:
@@ -220,6 +241,7 @@ def read_zip(path):
             "cutoff": (_tags(head, "dataCutOffAndCompletenessPrinciples") or [None])[0],
             "tech": ((_tags(head, "technologyDescriptionAndIncludedProcesses") or [""])[0])[:300],
             "ref_flow": None,
+            "lcia": read_lcia(text),
         }
         ref = re.search(r"<referenceToReferenceFlow>(\d+)<", head)
         ref_id, estimated = (ref[1], False) if ref else (_estimate_reference(zf, text), True)

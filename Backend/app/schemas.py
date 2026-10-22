@@ -35,6 +35,16 @@ class DuplicateGroup(Model):
     others: list[str]
 
 
+class Carbon(Model):
+    total: float
+    fossil: float | None
+    biogenic: float | None
+    land_use: float | None
+    unit: Literal["kg CO₂e"]
+    per: str | None
+    method: str
+
+
 class Candidate(Model):
     dataset_id: str
     name: str
@@ -55,6 +65,7 @@ class Candidate(Model):
     allocation: str | None
     cutoff: str | None
     tech_summary: str | None
+    carbon: Carbon | None
 
 
 class SelectedDataset(Model):
@@ -164,6 +175,9 @@ class Row(Model):
     review: Review
     conversion: Conversion | None
     explanation: Explanation | None
+    # T14(2026-10-18): 아래 둘은 선택 필드(없으면 기존 동작). mock 에는 없다
+    no_answer_reason: str | None = None
+    inferred_role: Literal["공정"] | None = None
 
 
 class SessionPayload(Model):
@@ -203,6 +217,7 @@ class DatasetDetail(Dataset):
     cutoff: str | None
     geography: str | None
     tech_summary: str | None
+    carbon: Carbon | None
     duplicates: list[DatasetDuplicate]
 
 
@@ -218,9 +233,15 @@ class DatasetSearchResponse(Model):
 
 
 # --- A20 ---
+class RowsSkipped(Model):
+    example: int  # FTA 양식의 기본 예시 2행과 같아서 뺀 행
+    empty_name: int  # FTA 양식에서 품명이 모두 비어(합계·꼬리 행 등) 뺀 행
+
+
 class PreviewResponse(Model):
     filename: str
     rows_total: int
+    rows_skipped: RowsSkipped
     column_mapping: list[ColumnMapping]
     file_columns: list[str]
     preview_rows: list[list[str]]
@@ -270,6 +291,22 @@ class RowPatch(Model):
 class RowUpdateResponse(Model):
     row: Row
     summary: Summary
+
+
+# --- A19 ---
+class EvalRunItem(Model):
+    run_id: str
+    status: Literal["done"]
+    created_at: str
+    config_label: str
+    set_label: str
+    split: str
+    rows: int
+
+
+class EvalRunList(Model):
+    items: list[EvalRunItem]
+    total: int
 
 
 # --- 오류 ---

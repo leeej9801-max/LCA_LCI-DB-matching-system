@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse, Response
 from psycopg.types.json import Jsonb
 
 from app.bom import clean, mapping, match, review
-from app.bom.reader import MAX_BYTES, read_bom
+from app.bom.reader import MAX_BYTES, read_bom_ex
 from app.db.connection import conninfo
 from app.errors import ApiError
 from app.jobs import enqueue
@@ -29,26 +29,26 @@ def get_db():
 
 def read_upload(file):
     data = file.file.read(MAX_BYTES + 1)  # 상한보다 1바이트 더 읽어 초과를 안다
-    return read_bom(file.filename, data)
+    return read_bom_ex(file.filename, data)
 
 
 def parse(file, mapping_raw):
-    """(파일명, 헤더, 행, column_mapping)."""
+    """(파일명, 헤더, 행, column_mapping, 뺀 행 수)."""
     override = mapping.parse_mapping(mapping_raw)
-    header, rows = read_upload(file)
-    return file.filename, header, rows, mapping.detect(header, rows[0][1] if rows else None, override)
+    header, rows, skipped = read_upload(file)
+    return file.filename, header, rows, mapping.detect(header, rows[0][1] if rows else None, override), skipped
 
 
 @router.post("/preview", response_model=PreviewResponse)
 def preview(file: UploadFile = File(...), mapping_raw: str | None = Form(None, alias="mapping")):  # A20 (DB 쓰기 없음)
-    filename, header, rows, column_mapping = parse(file, mapping_raw)
-    return {"filename": filename, "rows_total": len(rows), "column_mapping": column_mapping, "file_columns": header,
+    filename, header, rows, column_mapping, skipped = parse(file, mapping_raw)
+    return {"filename": filename, "rows_total": len(rows), "rows_skipped": skipped, "column_mapping": column_mapping, "file_columns": header,
             "preview_rows": [r for _, r in rows[:5]]}
 
 
 @router.post("", status_code=202)
 def create_session(file: UploadFile = File(...), mapping_raw: str | None = Form(None, alias="mapping"), conn=Depends(get_db)):  # A01
-    filename, header, rows, column_mapping = parse(file, mapping_raw)
+    filename, header, rows, column_mapping, _ = parse(file, mapping_raw)
     missing = mapping.missing_required(column_mapping)
     if missing:
         names = ", ".join(f"'{m}'" for m in missing)
