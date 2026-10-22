@@ -184,7 +184,14 @@ def test_parse_flags():
     assert parse_flags("") == (None, None, [])
 
 
+def need_files(*rels):
+    missing = [r for r in rels if not (ROOT / r).exists()]
+    if missing:
+        pytest.skip(f"{missing[0]} 없음(docs/LCA/data 는 git 밖)")
+
+
 def test_case_set_conversion_counts_and_validates():
+    need_files("docs/LCA/data/gold-draft-2026-10-18.csv")
     src = ROOT / "docs/LCA/data/gold-draft-2026-10-18.csv"
     with open(src, encoding="utf-8-sig", newline="") as f:
         out, unknown = convert(list(csv.DictReader(f)))
@@ -203,6 +210,7 @@ def list_ids():
 
 @pytest.mark.parametrize("rel", ["docs/LCA/data/gold/case-v1.csv", "docs/LCA/data/gold/measure-v1.csv"])
 def test_real_gold_files_validate_against_the_list(rel):
+    need_files(rel, "docs/LCA/data/lci-db-list-ecosq-849.csv")
     _, header, parsed = read_csv(ROOT / rel)
     assert validate(header, parsed, list_ids()) == []
     assert all(r["label_type"] in ("exact", "proxy", "none") for _, r in parsed)
@@ -289,8 +297,10 @@ def test_normalize_rows_reports_changes_only():
 
 def test_real_sets_after_normalization_hold_invariants():
     from tools.case_to_gold import load_catalog, name_key, normalize_rows
+    sets = ("docs/LCA/data/gold/case-v2.csv", "docs/LCA/data/gold/dev-v2.csv")
+    need_files(*sets, "docs/LCA/data/lci-db-list-ecosq-849.csv")
     cat = load_catalog()
-    for rel in ("docs/LCA/data/gold/case-v2.csv", "docs/LCA/data/gold/dev-v2.csv"):
+    for rel in sets:
         _, header, parsed = read_csv(ROOT / rel)
         assert validate(header, parsed, list_ids()) == []
         rows = [r for _, r in parsed]
